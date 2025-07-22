@@ -32,6 +32,7 @@
             color: white;
             padding: 30px;
             text-align: center;
+            position: relative;
         }
         
         .header h1 {
@@ -43,6 +44,53 @@
         .header p {
             font-size: 1.2em;
             opacity: 0.9;
+        }
+
+        /* 语言和Github按钮样式 */
+        .header-buttons {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .lang-btn, .github-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(10px);
+        }
+
+        .lang-btn:hover, .github-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .lang-btn.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .github-btn {
+            background: rgba(36, 41, 46, 0.8);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .github-btn:hover {
+            background: rgba(36, 41, 46, 0.9);
         }
         
         .main-content {
@@ -776,44 +824,66 @@
             .modal-body {
                 padding: 20px;
             }
+
+            .header-buttons {
+                position: static;
+                justify-content: center;
+                margin-top: 15px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>PLC数据格式转换工具</h1>
-            <p>数据格式检测、转换与智能推荐系统</p>
+            <!-- 语言切换和Github按钮 -->
+            <div class="header-buttons">
+                <button class="lang-btn active" onclick="switchLanguage('zh')" data-lang="zh">
+                    🇨🇳 中文
+                </button>
+                <button class="lang-btn" onclick="switchLanguage('en')" data-lang="en">
+                    🇺🇸 English
+                </button>
+                <a href="https://github.com/duyl328/PLC-Data-Lab" target="_blank" class="github-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    <span data-i18n="github">Github</span>
+                </a>
+            </div>
+
+            <h1 data-i18n="title">智能PLC数据格式转换与调试工具</h1>
+            <p data-i18n="subtitle">数据格式检测、转换与智能推荐系统</p>
         </div>
         
         <div class="main-content">
             <!-- 数据输入区 -->
             <div class="input-section">
                 <div class="section-title">
-                    📥 数据输入区
+                    📥 <span data-i18n="data_input">数据输入区</span>
                 </div>
                 
                 <div class="form-group">
-                    <label>输入格式选择：</label>
+                    <label data-i18n="input_format">输入格式选择：</label>
                     <select id="inputFormat">
-                        <option value="byte">byte[] (0-255)</option>
-                        <option value="ushort" selected>ushort[] (0-65535)</option>
-                        <option value="short">short[] (-32768 to 32767)</option>
-                        <option value="int">int[] (-2147483648 to 2147483647)</option>
-                        <option value="uint">uint[] (0 to 4294967295)</option>
-                        <option value="hex">Hex 字符串</option>
+                        <option value="byte" data-i18n="byte_format">byte[] (0-255)</option>
+                        <option value="ushort" selected data-i18n="ushort_format">ushort[] (0-65535)</option>
+                        <option value="short" data-i18n="short_format">short[] (-32768 to 32767)</option>
+                        <option value="int" data-i18n="int_format">int[] (-2147483648 to 2147483647)</option>
+                        <option value="uint" data-i18n="uint_format">uint[] (0 to 4294967295)</option>
+                        <option value="hex" data-i18n="hex_format">Hex 字符串</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label>原始数据输入：</label>
-                    <textarea id="rawData" placeholder="示例：[13312,0,16128,0,13312,0,8704,0,5888,0]&#10;或者：0x3400,0x0000,0x3F00,0x0000&#10;支持逗号、空格、换行分隔"></textarea>
+                    <label data-i18n="raw_data_input">原始数据输入：</label>
+                    <textarea id="rawData" data-i18n-placeholder="raw_data_placeholder"></textarea>
                 </div>
                 
                 <div class="form-group">
-                    <button class="btn btn-smart" onclick="intelligentAnalysis()">🧠 智能分析</button>
-                    <button class="btn" onclick="parseInput()">📊 解析数据</button>
-                    <button class="btn btn-secondary" onclick="clearInput()">🗑️ 清空</button>
+                    <button class="btn btn-smart" onclick="intelligentAnalysis()">🧠 <span data-i18n="intelligent_analysis">智能分析</span></button>
+                    <button class="btn" onclick="parseInput()">📊 <span data-i18n="parse_data">解析数据</span></button>
+                    <button class="btn btn-secondary" onclick="clearInput()">🗑️ <span data-i18n="clear">清空</span></button>
                 </div>
                 
                 <div id="inputValidation"></div>
@@ -821,7 +891,7 @@
                 <!-- 智能检测结果面板 - 移到输入区下方 -->
                 <div id="smartDetection" class="smart-detection" style="display: none;">
                     <div class="detection-header">
-                        🔍 智能检测结果
+                        🔍 <span data-i18n="smart_detection_result">智能检测结果</span>
                     </div>
                     <div id="detectionResults" class="detection-results"></div>
                 </div>
@@ -830,65 +900,65 @@
             <!-- 控制选项区 -->
             <div class="control-section">
                 <div class="section-title">
-                    ⚙️ 转换控制
+                    ⚙️ <span data-i18n="conversion_control">转换控制</span>
                 </div>
                 
                 <!-- 自动选择提示 -->
                 <div id="autoSelectNotice" class="auto-select-notice" style="display: none;">
-                    已根据智能检测结果自动选择最优配置
+                    <span data-i18n="auto_select_notice">已根据智能检测结果自动选择最优配置</span>
                 </div>
                 
                 <div class="form-group">
-                    <label>目标数据类型：</label>
+                    <label data-i18n="target_data_type">目标数据类型：</label>
                     <select id="targetType" onchange="filterResults()">
-                        <option value="all">🔄 显示所有类型</option>
-                        <option value="bool">bool (布尔)</option>
-                        <option value="byte">byte (无符号8位)</option>
-                        <option value="sbyte">sbyte (有符号8位)</option>
-                        <option value="short">short (有符号16位)</option>
-                        <option value="ushort">ushort (无符号16位)</option>
-                        <option value="int">int (有符号32位)</option>
-                        <option value="uint">uint (无符号32位)</option>
-                        <option value="long">long (有符号64位)</option>
-                        <option value="ulong">ulong (无符号64位)</option>
-                        <option value="float">float (32位浮点)</option>
-                        <option value="double">double (64位浮点)</option>
-                        <option value="ascii">ASCII 字符串</option>
+                        <option value="all" data-i18n="show_all_types">🔄 显示所有类型</option>
+                        <option value="bool" data-i18n="bool_type">bool (布尔)</option>
+                        <option value="byte" data-i18n="byte_type">byte (无符号8位)</option>
+                        <option value="sbyte" data-i18n="sbyte_type">sbyte (有符号8位)</option>
+                        <option value="short" data-i18n="short_type">short (有符号16位)</option>
+                        <option value="ushort" data-i18n="ushort_type">ushort (无符号16位)</option>
+                        <option value="int" data-i18n="int_type">int (有符号32位)</option>
+                        <option value="uint" data-i18n="uint_type">uint (无符号32位)</option>
+                        <option value="long" data-i18n="long_type">long (有符号64位)</option>
+                        <option value="ulong" data-i18n="ulong_type">ulong (无符号64位)</option>
+                        <option value="float" data-i18n="float_type">float (32位浮点)</option>
+                        <option value="double" data-i18n="double_type">double (64位浮点)</option>
+                        <option value="ascii" data-i18n="ascii_type">ASCII 字符串</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label>字节序选择：</label>
+                    <label data-i18n="byte_order_selection">字节序选择：</label>
                     <select id="byteOrder" onchange="filterResults()">
-                        <option value="all">🔄 显示所有字节序</option>
-                        <option value="ABCD">ABCD (大端序)</option>
-                        <option value="DCBA">DCBA (小端序)</option>
-                        <option value="CDAB">CDAB (西门子常见)</option>
-                        <option value="BADC">BADC (欧姆龙常见)</option>
+                        <option value="all" data-i18n="show_all_byte_order">🔄 显示所有字节序</option>
+                        <option value="ABCD" data-i18n="abcd_big_endian">ABCD (大端序)</option>
+                        <option value="DCBA" data-i18n="dcba_little_endian">DCBA (小端序)</option>
+                        <option value="CDAB" data-i18n="cdab_siemens">CDAB (西门子常见)</option>
+                        <option value="BADC" data-i18n="badc_omron">BADC (欧姆龙常见)</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label>编码格式：</label>
+                    <label data-i18n="encoding_format">编码格式：</label>
                     <select id="encoding" onchange="filterResults()">
-                        <option value="all">🔄 显示所有编码</option>
-                        <option value="DEC">DEC (十进制编码)</option>
-                        <option value="BCD">BCD (二进制编码十进制)</option>
-                        <option value="HEX">HEX (十六进制编码)</option>
+                        <option value="all" data-i18n="show_all_encoding">🔄 显示所有编码</option>
+                        <option value="DEC" data-i18n="dec_encoding">DEC (十进制编码)</option>
+                        <option value="BCD" data-i18n="bcd_encoding">BCD (二进制编码十进制)</option>
+                        <option value="HEX" data-i18n="hex_encoding">HEX (十六进制编码)</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <button class="btn btn-success" onclick="convertData()">🚀 转换</button>
+                    <button class="btn btn-success" onclick="convertData()">🚀 <span data-i18n="convert">转换</span></button>
                 </div>
                 
                 <!-- 推荐配置面板 -->
                 <div id="recommendationPanel" class="recommendation-panel" style="display: none;">
                     <div class="recommendation-header">
-                        ⭐ 智能推荐配置
+                        ⭐ <span data-i18n="smart_recommendation">智能推荐配置</span>
                     </div>
                     <div id="recommendedConfigs"></div>
-                    <button class="btn btn-success" onclick="applyRecommendation()">✅ 应用推荐配置</button>
+                    <button class="btn btn-success" onclick="applyRecommendation()">✅ <span data-i18n="apply_recommendation">应用推荐配置</span></button>
                 </div>
             </div>
         </div>
@@ -896,22 +966,22 @@
         <!-- 结果展示区 -->
         <div class="results-section" id="resultsSection" style="display: none;">
             <div class="section-title">
-                📊 转换结果
+                📊 <span data-i18n="conversion_results">转换结果</span>
             </div>
             
             <!-- 统计信息面板 -->
             <div id="statisticsPanel" class="statistics-panel" style="display: none;">
-                <h4>📈 转换统计</h4>
+                <h4>📈 <span data-i18n="conversion_statistics">转换统计</span></h4>
                 <div id="statisticsGrid" class="stats-grid"></div>
             </div>
             
             <div class="results-tabs">
-                <button class="tab-btn smart active" onclick="switchTab('smart-results')">🧠 智能推荐</button>
+                <button class="tab-btn smart active" onclick="switchTab('smart-results')">🧠 <span data-i18n="intelligent_recommendation">智能推荐</span></button>
                 <button class="tab-btn" onclick="switchTab('all-results')">
-                    转换结果
+                    <span data-i18n="conversion_results_tab">转换结果</span>
                     <span class="tab-counter" id="allResultsCounter" style="display: none;">0</span>
                 </button>
-                <button class="tab-btn" onclick="switchTab('raw-data')">原始数据</button>
+                <button class="tab-btn" onclick="switchTab('raw-data')"><span data-i18n="raw_data">原始数据</span></button>
             </div>
             
             <div id="smart-results" class="tab-content active">
@@ -932,7 +1002,7 @@
     <div id="detailsModal" class="details-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle">转换详情</h2>
+                <h2 class="modal-title" id="modalTitle" data-i18n="conversion_details">转换详情</h2>
                 <button class="close-btn" onclick="closeDetailsModal()">&times;</button>
             </div>
             <div class="modal-body" id="modalBody">
@@ -942,6 +1012,364 @@
     </div>
 
     <script>
+        // 国际化语言包
+        const i18n = {
+            zh: {
+                title: '智能PLC数据格式转换与调试工具',
+                subtitle: '数据格式检测、转换与智能推荐系统',
+                github: 'Github',
+                data_input: '数据输入区',
+                input_format: '输入格式选择：',
+                byte_format: 'byte[] (0-255)',
+                ushort_format: 'ushort[] (0-65535)',
+                short_format: 'short[] (-32768 to 32767)',
+                int_format: 'int[] (-2147483648 to 2147483647)',
+                uint_format: 'uint[] (0 to 4294967295)',
+                hex_format: 'Hex 字符串',
+                raw_data_input: '原始数据输入：',
+                raw_data_placeholder: '示例：[13312,0,16128,0,13312,0,8704,0,5888,0]\n或者：0x3400,0x0000,0x3F00,0x0000\n支持逗号、空格、换行分隔',
+                intelligent_analysis: '智能分析',
+                parse_data: '解析数据',
+                clear: '清空',
+                smart_detection_result: '智能检测结果',
+                conversion_control: '转换控制',
+                auto_select_notice: '已根据智能检测结果自动选择最优配置',
+                target_data_type: '目标数据类型：',
+                show_all_types: '🔄 显示所有类型',
+                bool_type: 'bool (布尔)',
+                byte_type: 'byte (无符号8位)',
+                sbyte_type: 'sbyte (有符号8位)',
+                short_type: 'short (有符号16位)',
+                ushort_type: 'ushort (无符号16位)',
+                int_type: 'int (有符号32位)',
+                uint_type: 'uint (无符号32位)',
+                long_type: 'long (有符号64位)',
+                ulong_type: 'ulong (无符号64位)',
+                float_type: 'float (32位浮点)',
+                double_type: 'double (64位浮点)',
+                ascii_type: 'ASCII 字符串',
+                byte_order_selection: '字节序选择：',
+                show_all_byte_order: '🔄 显示所有字节序',
+                abcd_big_endian: 'ABCD (大端序)',
+                dcba_little_endian: 'DCBA (小端序)',
+                cdab_siemens: 'CDAB (西门子常见)',
+                badc_omron: 'BADC (欧姆龙常见)',
+                encoding_format: '编码格式：',
+                show_all_encoding: '🔄 显示所有编码',
+                dec_encoding: 'DEC (十进制编码)',
+                bcd_encoding: 'BCD (二进制编码十进制)',
+                hex_encoding: 'HEX (十六进制编码)',
+                convert: '转换',
+                smart_recommendation: '智能推荐配置',
+                apply_recommendation: '应用推荐配置',
+                conversion_results: '转换结果',
+                conversion_statistics: '转换统计',
+                intelligent_recommendation: '智能推荐',
+                conversion_results_tab: '转换结果',
+                raw_data: '原始数据',
+                conversion_details: '转换详情',
+                // 统计相关
+                total_conversions: '总转换数',
+                successful_conversions: '成功转换',
+                failed_conversions: '转换失败',
+                smart_recommendations: '智能推荐',
+                success_rate: '成功率',
+                recommendation_rate: '推荐率',
+                // 智能检测相关
+                encoding_format_detection: '编码格式',
+                byte_order_detection: '字节序',
+                strongly_recommended: '强烈推荐',
+                recommended: '推荐',
+                // 错误消息
+                no_data_input: '请输入数据',
+                invalid_hex_format: '无效的十六进制格式',
+                invalid_number: '无效的数值',
+                data_parsed_successfully: '成功解析',
+                items: '个数据项',
+                value_out_of_range: '数值超出范围',
+                no_data_to_convert: '请先输入并解析数据',
+                no_recommendations: '没有推荐配置可应用',
+                // 智能分析相关
+                bcd_format_match: '字节符合BCD格式',
+                non_bcd_bytes: '存在非BCD格式字节',
+                printable_characters: '字节为可打印字符',
+                ascii_characters: '字节为ASCII字符',
+                low_ascii_ratio: 'ASCII字符比例较低',
+                decimal_always_valid: '十进制编码始终有效',
+                reasonable_floats: '个浮点数转换合理',
+                valid_floats: '个浮点数转换有效',
+                poor_float_conversion: '浮点数转换效果不佳',
+                insufficient_data_length: '数据长度不足以进行浮点数分析',
+                reasonable_16bit_values: '个16位值合理',
+                reasonable_byte_values: '个字节值合理',
+                high_confidence_ascii: 'ASCII字符检测置信度高，推荐字符串解析',
+                high_confidence_bcd: 'BCD编码检测置信度高，推荐无符号整数',
+                best_byteorder_float: '字节序浮点数转换效果最佳',
+                good_16bit_parsing: '16位无符号整数解析效果较好',
+                no_high_confidence: '未发现高置信度的格式特征',
+                // 详情页面相关
+                conversion_result_title: '转换结果',
+                current_config: '当前配置：',
+                data_type: '数据类型',
+                byte_order: '字节序',
+                encoding_format_detail: '编码格式',
+                conversion_result: '转换结果',
+                all_byte_order_tests: '所有字节序格式测试结果',
+                format: '格式',
+                conversion_failed: '转换失败',
+                conversion_principle: '转换原理说明',
+                problem_analysis: '问题分析：',
+                data_analysis: '数据分析：',
+                byte_order_explanation: '字节序说明：',
+                big_endian_desc: '大端序：高字节在前，低字节在后，如 0x12345678 存储为 [12][34][56][78]',
+                little_endian_desc: '小端序：低字节在前，高字节在后，如 0x12345678 存储为 [78][56][34][12]',
+                middle_endian_ab_desc: '中端序：字对交换的大端序，西门子PLC常见',
+                middle_endian_dc_desc: '中端序：字对交换的小端序，欧姆龙PLC常见',
+                memory_layout_analysis: '内存布局分析',
+                original_data: '原始数据',
+                byte_representation: '字节表示',
+                float_conversion_example: '浮点数转换示例',
+                order: '顺序',
+                // 原始数据显示
+                input_data: '输入数据',
+                convert_to_byte_array: '转换为字节数组',
+                hex_representation: '十六进制表示',
+                binary_representation: '二进制表示',
+                // 数据分析文本
+                ushort_to_int_analysis: '每2个16位ushort值被组合成1个32位int值，这可能是因为原始数据是32位整数被拆分读取造成的。',
+                int_to_ushort_analysis: '每个32位int被拆分成2个16位ushort读取，如果读取结果不符合预期，可能存在字节序转换问题。',
+                you_input: '你输入了',
+                values: '值',
+                convert_to: '，转换为',
+                type: '类型。'
+            },
+            en: {
+                title: 'Smart PLC Data Format Converter & Debugger',
+                subtitle: 'Data Format Detection, Conversion & Smart Recommendation System',
+                github: 'Github',
+                data_input: 'Data Input',
+                input_format: 'Input Format:',
+                byte_format: 'byte[] (0-255)',
+                ushort_format: 'ushort[] (0-65535)',
+                short_format: 'short[] (-32768 to 32767)',
+                int_format: 'int[] (-2147483648 to 2147483647)',
+                uint_format: 'uint[] (0 to 4294967295)',
+                hex_format: 'Hex String',
+                raw_data_input: 'Raw Data Input:',
+                raw_data_placeholder: 'Example: [13312,0,16128,0,13312,0,8704,0,5888,0]\nOr: 0x3400,0x0000,0x3F00,0x0000\nSupports comma, space, newline separation',
+                intelligent_analysis: 'Smart Analysis',
+                parse_data: 'Parse Data',
+                clear: 'Clear',
+                smart_detection_result: 'Smart Detection Result',
+                conversion_control: 'Conversion Control',
+                auto_select_notice: 'Optimal configuration automatically selected based on smart detection results',
+                target_data_type: 'Target Data Type:',
+                show_all_types: '🔄 Show All Types',
+                bool_type: 'bool (Boolean)',
+                byte_type: 'byte (Unsigned 8-bit)',
+                sbyte_type: 'sbyte (Signed 8-bit)',
+                short_type: 'short (Signed 16-bit)',
+                ushort_type: 'ushort (Unsigned 16-bit)',
+                int_type: 'int (Signed 32-bit)',
+                uint_type: 'uint (Unsigned 32-bit)',
+                long_type: 'long (Signed 64-bit)',
+                ulong_type: 'ulong (Unsigned 64-bit)',
+                float_type: 'float (32-bit Float)',
+                double_type: 'double (64-bit Double)',
+                ascii_type: 'ASCII String',
+                byte_order_selection: 'Byte Order:',
+                show_all_byte_order: '🔄 Show All Byte Orders',
+                abcd_big_endian: 'ABCD (Big Endian)',
+                dcba_little_endian: 'DCBA (Little Endian)',
+                cdab_siemens: 'CDAB (Siemens Common)',
+                badc_omron: 'BADC (Omron Common)',
+                encoding_format: 'Encoding Format:',
+                show_all_encoding: '🔄 Show All Encodings',
+                dec_encoding: 'DEC (Decimal Encoding)',
+                bcd_encoding: 'BCD (Binary Coded Decimal)',
+                hex_encoding: 'HEX (Hexadecimal Encoding)',
+                convert: 'Convert',
+                smart_recommendation: 'Smart Recommendations',
+                apply_recommendation: 'Apply Recommendation',
+                conversion_results: 'Conversion Results',
+                conversion_statistics: 'Conversion Statistics',
+                intelligent_recommendation: 'Smart Recommendations',
+                conversion_results_tab: 'Results',
+                raw_data: 'Raw Data',
+                conversion_details: 'Conversion Details',
+                // 统计相关
+                total_conversions: 'Total',
+                successful_conversions: 'Success',
+                failed_conversions: 'Failed',
+                smart_recommendations: 'Recommended',
+                success_rate: 'Success Rate',
+                recommendation_rate: 'Rec. Rate',
+                // 智能检测相关
+                encoding_format_detection: 'Encoding',
+                byte_order_detection: 'Byte Order',
+                strongly_recommended: 'Strongly Recommended',
+                recommended: 'Recommended',
+                // 错误消息
+                no_data_input: 'Please input data',
+                invalid_hex_format: 'Invalid hexadecimal format',
+                invalid_number: 'Invalid number',
+                data_parsed_successfully: 'Successfully parsed',
+                items: 'data items',
+                value_out_of_range: 'Value out of range',
+                no_data_to_convert: 'Please input and parse data first',
+                no_recommendations: 'No recommendation available',
+                // 智能分析相关
+                bcd_format_match: 'bytes match BCD format',
+                non_bcd_bytes: 'Non-BCD format bytes exist',
+                printable_characters: 'bytes are printable characters',
+                ascii_characters: 'bytes are ASCII characters',
+                low_ascii_ratio: 'Low ASCII character ratio',
+                decimal_always_valid: 'Decimal encoding is always valid',
+                reasonable_floats: 'float conversions are reasonable',
+                valid_floats: 'float conversions are valid',
+                poor_float_conversion: 'Poor float conversion performance',
+                insufficient_data_length: 'Insufficient data length for float analysis',
+                reasonable_16bit_values: '16-bit values are reasonable',
+                reasonable_byte_values: 'byte values are reasonable',
+                high_confidence_ascii: 'High confidence ASCII detection, recommend string parsing',
+                high_confidence_bcd: 'High confidence BCD detection, recommend unsigned integer',
+                best_byteorder_float: 'byte order has best float conversion',
+                good_16bit_parsing: '16-bit unsigned integer parsing works well',
+                no_high_confidence: 'No high-confidence format features found',
+                // 详情页面相关
+                conversion_result_title: 'Conversion Result',
+                current_config: 'Current Configuration:',
+                data_type: 'Data Type',
+                byte_order: 'Byte Order',
+                encoding_format_detail: 'Encoding',
+                conversion_result: 'Result',
+                all_byte_order_tests: 'All Byte Order Test Results',
+                format: 'Format',
+                conversion_failed: 'Conversion Failed',
+                conversion_principle: 'Conversion Principles',
+                problem_analysis: 'Analysis:',
+                data_analysis: 'Data Analysis:',
+                byte_order_explanation: 'Byte Order Explanation:',
+                big_endian_desc: 'Big Endian: High byte first, e.g., 0x12345678 stored as [12][34][56][78]',
+                little_endian_desc: 'Little Endian: Low byte first, e.g., 0x12345678 stored as [78][56][34][12]',
+                middle_endian_ab_desc: 'Middle Endian: Word-swapped big endian, common in Siemens PLCs',
+                middle_endian_dc_desc: 'Middle Endian: Word-swapped little endian, common in Omron PLCs',
+                memory_layout_analysis: 'Memory Layout Analysis',
+                original_data: 'Original Data',
+                byte_representation: 'Byte Representation',
+                float_conversion_example: 'Float Conversion Example',
+                order: 'Order',
+                // 原始数据显示
+                input_data: 'Input Data',
+                convert_to_byte_array: 'Convert to Byte Array',
+                hex_representation: 'Hex Representation',
+                binary_representation: 'Binary Representation',
+                // 数据分析文本
+                ushort_to_int_analysis: 'Every 2 16-bit ushort values are combined into one 32-bit int value, possibly due to 32-bit integers being split during reading.',
+                int_to_ushort_analysis: 'Each 32-bit int is split into 2 16-bit ushorts. If results don\'t meet expectations, byte order issues may exist.',
+                you_input: 'You input ',
+                values: ' values: [',
+                convert_to: '], converting to ',
+                type: ' type.'
+            }
+        };
+
+        // 当前语言
+        let currentLanguage = 'zh';
+
+        // 切换语言
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-lang') === lang) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // 更新页面语言属性
+            document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+            
+            // 更新页面标题
+            document.title = i18n[lang].title;
+            
+            // 更新所有国际化文本
+            updateI18nTexts();
+            
+            // 保存语言设置
+            try {
+                localStorage.setItem('plc-tool-lang', lang);
+            } catch (e) {
+                // 忽略localStorage错误
+            }
+            
+            // 如果有检测结果，重新显示（因为需要更新语言）
+            if (Object.keys(smartAnalysisResults).length > 0) {
+                displaySmartDetection();
+                displayRecommendations();
+            }
+            
+            // 如果有转换结果，重新显示统计信息
+            if (allResults.length > 0) {
+                const statistics = calculateStatistics();
+                displayStatistics(statistics);
+            }
+        }
+
+        // 更新国际化文本
+        function updateI18nTexts() {
+            const texts = i18n[currentLanguage];
+            
+            // 更新所有带有 data-i18n 属性的元素
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (texts[key]) {
+                    element.textContent = texts[key];
+                }
+            });
+            
+            // 更新带有 data-i18n-placeholder 属性的元素
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+                const key = element.getAttribute('data-i18n-placeholder');
+                if (texts[key]) {
+                    element.placeholder = texts[key];
+                }
+            });
+        }
+
+        // 获取国际化文本
+        function t(key, ...args) {
+            let text = i18n[currentLanguage][key] || key;
+            
+            // 如果有参数，进行字符串替换
+            if (args.length > 0) {
+                args.forEach((arg, index) => {
+                    text = text.replace(`{${index}}`, arg);
+                });
+            }
+            
+            return text;
+        }
+
+        // 页面加载时初始化语言
+        document.addEventListener('DOMContentLoaded', function() {
+            // 尝试从localStorage加载语言设置
+            let savedLang = 'zh';
+            try {
+                savedLang = localStorage.getItem('plc-tool-lang') || 'zh';
+            } catch (e) {
+                // 忽略localStorage错误
+            }
+            
+            switchLanguage(savedLang);
+            
+            // 设置默认数据
+            document.getElementById('rawData').value = '[13312,0,16128,0,13312,0,8704,0,5888,0]';
+        });
+
+        // 原有的所有JavaScript代码保持不变，只需要修改显示文本的部分
         let currentData = [];
         let currentInputFormat = 'ushort';
         let allResults = [];
@@ -1063,13 +1491,13 @@
                 results.BCD = {
                     confidence: bcdScore === bytes.length ? 'high' : 'medium',
                     score: (bcdScore / bytes.length) * 100,
-                    reason: `${bcdScore}/${bytes.length} 字节符合BCD格式`
+                    reason: `${bcdScore}/${bytes.length} ${t('bcd_format_match')}`
                 };
             } else {
                 results.BCD = {
                     confidence: 'low',
                     score: 0,
-                    reason: '存在非BCD格式字节'
+                    reason: t('non_bcd_bytes')
                 };
             }
             
@@ -1092,19 +1520,19 @@
                 results.ASCII = {
                     confidence: 'high',
                     score: printableRatio * 100,
-                    reason: `${printableCount}/${bytes.length} 字节为可打印字符`
+                    reason: `${printableCount}/${bytes.length} ${t('printable_characters')}`
                 };
             } else if (asciiRatio > 0.8) {
                 results.ASCII = {
                     confidence: 'medium',
                     score: asciiRatio * 100,
-                    reason: `${asciiCount}/${bytes.length} 字节为ASCII字符`
+                    reason: `${asciiCount}/${bytes.length} ${t('ascii_characters')}`
                 };
             } else {
                 results.ASCII = {
                     confidence: 'low',
                     score: asciiRatio * 100,
-                    reason: 'ASCII字符比例较低'
+                    reason: t('low_ascii_ratio')
                 };
             }
             
@@ -1112,7 +1540,7 @@
             results.DEC = {
                 confidence: 'high',
                 score: 100,
-                reason: '十进制编码始终有效'
+                reason: t('decimal_always_valid')
             };
             
             return results;
@@ -1163,15 +1591,15 @@
                     
                     if (reasonableRatio > 0.7) {
                         confidence = 'high';
-                        reason = `${reasonableFloatCount}/${totalAttempts} 个浮点数转换合理`;
+                        reason = `${reasonableFloatCount}/${totalAttempts} ${t('reasonable_floats')}`;
                     } else if (validRatio > 0.5) {
                         confidence = 'medium';
-                        reason = `${validFloatCount}/${totalAttempts} 个浮点数转换有效`;
+                        reason = `${validFloatCount}/${totalAttempts} ${t('valid_floats')}`;
                     } else {
-                        reason = '浮点数转换效果不佳';
+                        reason = t('poor_float_conversion');
                     }
                 } else {
-                    reason = '数据长度不足以进行浮点数分析';
+                    reason = t('insufficient_data_length');
                 }
                 
                 results[byteOrder] = {
@@ -1205,7 +1633,7 @@
                 results.short = {
                     confidence: shortRatio > 0.6 ? 'high' : shortRatio > 0.3 ? 'medium' : 'low',
                     score: shortRatio * 100,
-                    reason: `${reasonableShortCount}/${totalShorts} 个16位值合理`
+                    reason: `${reasonableShortCount}/${totalShorts} ${t('reasonable_16bit_values')}`
                 };
             }
             
@@ -1221,7 +1649,7 @@
             results.byte = {
                 confidence: byteRatio > 0.8 ? 'high' : byteRatio > 0.5 ? 'medium' : 'low',
                 score: byteRatio * 100,
-                reason: `${reasonableByteCount}/${bytes.length} 个字节值合理`
+                reason: `${reasonableByteCount}/${bytes.length} ${t('reasonable_byte_values')}`
             };
             
             return results;
@@ -1269,7 +1697,7 @@
                 .sort((a, b) => b[1].score - a[1].score);
             
             if (highConfidenceEncodings.length > 0) {
-                html += '<div class="detection-category">编码格式</div>';
+                html += `<div class="detection-category">${t('encoding_format_detection')}</div>`;
                 for (let [format, result] of highConfidenceEncodings.slice(0, 3)) {
                     const confidenceClass = `confidence-${result.confidence}`;
                     const badgeClass = `badge-${result.confidence}`;
@@ -1293,7 +1721,7 @@
                 .sort((a, b) => b[1].score - a[1].score);
                 
             if (highConfidenceByteOrders.length > 0) {
-                html += '<div class="detection-category">字节序</div>';
+                html += `<div class="detection-category">${t('byte_order_detection')}</div>`;
                 for (let [order, result] of highConfidenceByteOrders.slice(0, 3)) {
                     const confidenceClass = `confidence-${result.confidence}`;
                     const badgeClass = `badge-${result.confidence}`;
@@ -1311,7 +1739,7 @@
                 }
             }
             
-            results.innerHTML = html || '<div class="detection-item">未发现高置信度的格式特征</div>';
+            results.innerHTML = html || `<div class="detection-item">${t('no_high_confidence')}</div>`;
             panel.style.display = 'block';
         }
         
@@ -1345,7 +1773,7 @@
                     encoding: 'DEC',
                     byteOrder: 'DCBA',
                     dataType: 'ascii',
-                    reason: 'ASCII字符检测置信度高，推荐字符串解析',
+                    reason: t('high_confidence_ascii'),
                     confidence: 'high'
                 });
             }
@@ -1355,7 +1783,7 @@
                     encoding: 'BCD',
                     byteOrder: bestByteOrder,
                     dataType: 'uint',
-                    reason: 'BCD编码检测置信度高，推荐无符号整数',
+                    reason: t('high_confidence_bcd'),
                     confidence: 'high'
                 });
             }
@@ -1366,7 +1794,7 @@
                     encoding: bestEncoding,
                     byteOrder: bestByteOrder,
                     dataType: 'float',
-                    reason: `${bestByteOrder}字节序浮点数转换效果最佳`,
+                    reason: `${bestByteOrder}${t('best_byteorder_float')}`,
                     confidence: bestByteOrderScore > 70 ? 'high' : 'medium'
                 });
             }
@@ -1378,7 +1806,7 @@
                     encoding: bestEncoding,
                     byteOrder: bestByteOrder,
                     dataType: 'ushort',
-                    reason: '16位无符号整数解析效果较好',
+                    reason: t('good_16bit_parsing'),
                     confidence: smartAnalysisResults.dataType.short.confidence
                 });
             }
@@ -1399,7 +1827,7 @@
             
             let html = '';
             recommendedConfigs.forEach((config, index) => {
-                const badgeText = config.confidence === 'high' ? '强烈推荐' : '推荐';
+                const badgeText = config.confidence === 'high' ? t('strongly_recommended') : t('recommended');
                 html += `
                     <div class="recommended-item" data-index="${index}">
                         <div class="recommended-badge">${badgeText}</div>
@@ -1418,7 +1846,7 @@
         // 应用推荐配置
         function applyRecommendation() {
             if (recommendedConfigs.length === 0) {
-                alert('没有推荐配置可应用');
+                alert(t('no_recommendations'));
                 return;
             }
             
@@ -1441,7 +1869,7 @@
             try {
                 const inputText = rawDataElement.value.trim();
                 if (!inputText) {
-                    throw new Error('请输入数据');
+                    throw new Error(t('no_data_input'));
                 }
                 
                 // 清空之前的结果
@@ -1454,7 +1882,7 @@
                     const hexPattern = /0x[0-9A-Fa-f]+|[0-9A-Fa-f]+/g;
                     const hexMatches = inputText.match(hexPattern);
                     if (!hexMatches) {
-                        throw new Error('无效的十六进制格式');
+                        throw new Error(t('invalid_hex_format'));
                     }
                     parsedData = hexMatches.map(hex => {
                         const value = parseInt(hex.replace('0x', ''), 16);
@@ -1467,7 +1895,7 @@
                     parsedData = values.map(v => {
                         const num = v.includes('0x') ? parseInt(v, 16) : parseInt(v);
                         if (isNaN(num)) {
-                            throw new Error(`无效的数值: ${v}`);
+                            throw new Error(`${t('invalid_number')}: ${v}`);
                         }
                         return num;
                     });
@@ -1477,7 +1905,7 @@
                 currentData = parsedData;
                 
                 if (showMessage) {
-                    validation.innerHTML = `<div class="success">✅ 成功解析 ${parsedData.length} 个数据项</div>`;
+                    validation.innerHTML = `<div class="success">✅ ${t('data_parsed_successfully')} ${parsedData.length} ${t('items')}</div>`;
                 }
                 
                 return true;
@@ -1507,7 +1935,7 @@
                 const [min, max] = ranges[format];
                 for (let value of data) {
                     if (value < min || value > max) {
-                        throw new Error(`数值 ${value} 超出 ${format} 类型范围 [${min}, ${max}]`);
+                        throw new Error(`${t('value_out_of_range')} ${value} ${format} [${min}, ${max}]`);
                     }
                 }
             }
@@ -1516,7 +1944,7 @@
         // 转换数据（增强版）
         function convertData(isSmartMode = false) {
             if (currentData.length === 0) {
-                alert('请先输入并解析数据');
+                alert(t('no_data_to_convert'));
                 return;
             }
             
@@ -1610,7 +2038,7 @@
                                 byteOrder,
                                 encoding,
                                 result: null,
-                                displayValue: '转换失败',
+                                displayValue: t('conversion_failed'),
                                 isValid: false,
                                 smartScore: 0,
                                 isRecommended: false,
@@ -1707,27 +2135,27 @@
             grid.innerHTML = `
                 <div class="stat-item">
                     <div class="stat-value">${stats.total}</div>
-                    <div class="stat-label">总转换数</div>
+                    <div class="stat-label">${t('total_conversions')}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value">${stats.successful}</div>
-                    <div class="stat-label">成功转换</div>
+                    <div class="stat-label">${t('successful_conversions')}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value">${stats.failed}</div>
-                    <div class="stat-label">转换失败</div>
+                    <div class="stat-label">${t('failed_conversions')}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value">${stats.recommended}</div>
-                    <div class="stat-label">智能推荐</div>
+                    <div class="stat-label">${t('smart_recommendations')}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value">${successRate}%</div>
-                    <div class="stat-label">成功率</div>
+                    <div class="stat-label">${t('success_rate')}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value">${recommendRate}%</div>
-                    <div class="stat-label">推荐率</div>
+                    <div class="stat-label">${t('recommendation_rate')}</div>
                 </div>
             `;
             
@@ -1816,7 +2244,7 @@
             const modalTitle = document.getElementById('modalTitle');
             const modalBody = document.getElementById('modalBody');
             
-            modalTitle.textContent = `${result.inputFormat.toUpperCase()} → ${result.dataType.toUpperCase()} 转换详情`;
+            modalTitle.textContent = `${result.inputFormat.toUpperCase()} → ${result.dataType.toUpperCase()} ${t('conversion_details')}`;
             
             // 生成详细内容
             const detailsHtml = generateConversionDetails(result);
@@ -1835,26 +2263,26 @@
             
             let html = `
                 <div class="detail-section">
-                    <div class="detail-title">📤 转换结果</div>
+                    <div class="detail-title">📤 ${t('conversion_result_title')}</div>
                     <div class="byteorder-test">
-                        <strong>当前配置：</strong>
+                        <strong>${t('current_config')}</strong>
                         <div class="byteorder-item">
-                            <span class="byteorder-label">数据类型</span>
+                            <span class="byteorder-label">${t('data_type')}</span>
                             <span class="byteorder-value">${result.dataType.toUpperCase()}</span>
                             <span class="byteorder-status">${result.isValid ? '✅' : '❌'}</span>
                         </div>
                         <div class="byteorder-item">
-                            <span class="byteorder-label">字节序</span>
+                            <span class="byteorder-label">${t('byte_order')}</span>
                             <span class="byteorder-value">${result.byteOrder}</span>
                             <span class="byteorder-status">🔄</span>
                         </div>
                         <div class="byteorder-item">
-                            <span class="byteorder-label">编码格式</span>
+                            <span class="byteorder-label">${t('encoding_format_detail')}</span>
                             <span class="byteorder-value">${result.encoding}</span>
                             <span class="byteorder-status">🎯</span>
                         </div>
                         <div class="byteorder-item">
-                            <span class="byteorder-label">转换结果</span>
+                            <span class="byteorder-label">${t('conversion_result')}</span>
                             <span class="byteorder-value" style="max-width: 300px; word-break: break-all;">${result.displayValue}</span>
                             <span class="byteorder-status">${result.isValid ? '✅' : '❌'}</span>
                         </div>
@@ -1866,7 +2294,7 @@
             if (result.dataType !== 'ascii' && result.dataType !== 'bool' && result.dataType !== 'byte') {
                 html += `
                     <div class="detail-section">
-                        <div class="detail-title">🧪 所有字节序格式测试结果</div>
+                        <div class="detail-title">🧪 ${t('all_byte_order_tests')}</div>
                         <div class="byteorder-test">
                 `;
                 
@@ -1874,11 +2302,11 @@
                     try {
                         const testResult = convertWithParams(bytes, result.dataType, byteOrder, result.encoding);
                         const isSuccess = testResult.success && testResult.isValid;
-                        const displayValue = testResult.success ? testResult.displayValue : '转换失败';
+                        const displayValue = testResult.success ? testResult.displayValue : t('conversion_failed');
                         
                         html += `
                             <div class="byteorder-item">
-                                <span class="byteorder-label">${byteOrder}格式</span>
+                                <span class="byteorder-label">${byteOrder}${t('format')}</span>
                                 <span class="byteorder-value">[${displayValue}]</span>
                                 <span class="byteorder-status">${isSuccess ? '✅' : '❌'}</span>
                             </div>
@@ -1886,8 +2314,8 @@
                     } catch (error) {
                         html += `
                             <div class="byteorder-item">
-                                <span class="byteorder-label">${byteOrder}格式</span>
-                                <span class="byteorder-value">转换失败</span>
+                                <span class="byteorder-label">${byteOrder}${t('format')}</span>
+                                <span class="byteorder-value">${t('conversion_failed')}</span>
                                 <span class="byteorder-status">❌</span>
                             </div>
                         `;
@@ -1900,11 +2328,11 @@
             // 转换原理说明
             html += `
                 <div class="detail-section">
-                    <div class="detail-title">📚 转换原理说明</div>
+                    <div class="detail-title">📚 ${t('conversion_principle')}</div>
                     <div class="principle-box">
                         <div class="principle-item">
-                            <strong>问题分析：</strong>
-                            <span>你输入了${currentData.length}个${currentInputFormat}值：[${currentData.slice(0, 10).join(', ')}${currentData.length > 10 ? '...' : ''}]，转换为${result.dataType}类型。</span>
+                            <strong>${t('problem_analysis')}</strong>
+                            <span>${t('you_input')}${currentData.length}${t('values')}${currentData.slice(0, 10).join(', ')}${currentData.length > 10 ? '...' : ''}]${t('convert_to')}${result.dataType}${t('type')}</span>
                         </div>
             `;
             
@@ -1912,15 +2340,15 @@
             if (currentInputFormat === 'ushort' && result.dataType === 'int') {
                 html += `
                         <div class="principle-item">
-                            <strong>数据分析：</strong>
-                            <span>每2个16位ushort值被组合成1个32位int值，这可能是因为原始数据是32位整数被拆分读取造成的。</span>
+                            <strong>${t('data_analysis')}</strong>
+                            <span>${t('ushort_to_int_analysis')}</span>
                         </div>
                 `;
             } else if (currentInputFormat === 'int' && result.dataType === 'ushort') {
                 html += `
                         <div class="principle-item">
-                            <strong>数据分析：</strong>
-                            <span>每个32位int被拆分成2个16位ushort读取，如果读取结果不符合预期，可能存在字节序转换问题。</span>
+                            <strong>${t('data_analysis')}</strong>
+                            <span>${t('int_to_ushort_analysis')}</span>
                         </div>
                 `;
             }
@@ -1928,12 +2356,12 @@
             // 字节序说明
             html += `
                         <div class="principle-item">
-                            <strong>字节序说明：</strong>
+                            <strong>${t('byte_order_explanation')}</strong>
                             <div style="margin-top: 8px;">
-                                <div>• <strong>ABCD (大端序)：</strong> 高字节在前，低字节在后，如 0x12345678 存储为 [12][34][56][78]</div>
-                                <div>• <strong>DCBA (小端序)：</strong> 低字节在前，高字节在后，如 0x12345678 存储为 [78][56][34][12]</div>
-                                <div>• <strong>CDAB (中端序)：</strong> 字对交换的大端序，西门子PLC常见</div>
-                                <div>• <strong>BADC (中端序)：</strong> 字对交换的小端序，欧姆龙PLC常见</div>
+                                <div>• <strong>ABCD:</strong> ${t('big_endian_desc')}</div>
+                                <div>• <strong>DCBA:</strong> ${t('little_endian_desc')}</div>
+                                <div>• <strong>CDAB:</strong> ${t('middle_endian_ab_desc')}</div>
+                                <div>• <strong>BADC:</strong> ${t('middle_endian_dc_desc')}</div>
                             </div>
                         </div>
                     </div>
@@ -1944,22 +2372,22 @@
             if (bytes.length > 0) {
                 html += `
                     <div class="detail-section">
-                        <div class="detail-title">💾 内存布局分析</div>
+                        <div class="detail-title">💾 ${t('memory_layout_analysis')}</div>
                         <div class="memory-layout">
-                            <div class="memory-step">原始数据: [${currentData.slice(0, 5).join(', ')}${currentData.length > 5 ? '...' : ''}]</div>
-                            <div class="memory-step">字节表示: [${bytes.slice(0, 20).map(b => '0x' + b.toString(16).padStart(2, '0')).join(', ')}${bytes.length > 20 ? '...' : ''}]</div>
+                            <div class="memory-step">${t('original_data')}: [${currentData.slice(0, 5).join(', ')}${currentData.length > 5 ? '...' : ''}]</div>
+                            <div class="memory-step">${t('byte_representation')}: [${bytes.slice(0, 20).map(b => '0x' + b.toString(16).padStart(2, '0')).join(', ')}${bytes.length > 20 ? '...' : ''}]</div>
                 `;
                 
                 if (result.dataType === 'float' && bytes.length >= 4) {
                     const firstFourBytes = bytes.slice(0, 4);
                     html += `
                             <div class="memory-step">
-                                浮点数转换示例 (前4字节):
+                                ${t('float_conversion_example')} (前4字节):
                                 <div style="margin-top: 5px;">
-                                    DCBA顺序: <span class="memory-bytes">[${firstFourBytes.map(b => '0x' + b.toString(16).padStart(2, '0')).join('][')}]}</span> → ${getFloatFromBytes(firstFourBytes, 'DCBA')}
+                                    DCBA${t('order')}: <span class="memory-bytes">[${firstFourBytes.map(b => '0x' + b.toString(16).padStart(2, '0')).join('][')}]}</span> → ${getFloatFromBytes(firstFourBytes, 'DCBA')}
                                 </div>
                                 <div>
-                                    ABCD顺序: <span class="memory-bytes">[${firstFourBytes.slice().reverse().map(b => '0x' + b.toString(16).padStart(2, '0')).join('][')}]}</span> → ${getFloatFromBytes(firstFourBytes, 'ABCD')}
+                                    ABCD${t('order')}: <span class="memory-bytes">[${firstFourBytes.slice().reverse().map(b => '0x' + b.toString(16).padStart(2, '0')).join('][')}]}</span> → ${getFloatFromBytes(firstFourBytes, 'ABCD')}
                                 </div>
                             </div>
                     `;
@@ -1983,7 +2411,7 @@
                 const value = view.getFloat32(0, true);
                 return isFinite(value) ? value.toFixed(6) : value.toString();
             } catch (error) {
-                return '转换失败';
+                return t('conversion_failed');
             }
         }
         
@@ -2296,19 +2724,19 @@
             
             rawDataDisplay.innerHTML = `
                 <div class="process-step">
-                    <div class="step-title">📥 输入数据 (${currentInputFormat})</div>
+                    <div class="step-title">📥 ${t('input_data')} (${currentInputFormat})</div>
                     <div class="step-content">[${currentData.join(', ')}]</div>
                 </div>
                 <div class="process-step">
-                    <div class="step-title">🔢 转换为字节数组</div>
+                    <div class="step-title">🔢 ${t('convert_to_byte_array')}</div>
                     <div class="step-content">[${bytes.join(', ')}]</div>
                 </div>
                 <div class="process-step">
-                    <div class="step-title">🔤 十六进制表示</div>
+                    <div class="step-title">🔤 ${t('hex_representation')}</div>
                     <div class="step-content">[${bytes.map(b => '0x' + b.toString(16).padStart(2, '0').toUpperCase()).join(', ')}]</div>
                 </div>
                 <div class="process-step">
-                    <div class="step-title">💾 二进制表示</div>
+                    <div class="step-title">💾 ${t('binary_representation')}</div>
                     <div class="step-content">[${bytes.map(b => '0b' + b.toString(2).padStart(8, '0')).join(', ')}]</div>
                 </div>
             `;
@@ -2373,10 +2801,6 @@
             recommendedConfigs = [];
             clearPreviousResults();
         }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('rawData').value = '[13312,0,16128,0,13312,0,8704,0,5888,0]';
-        });
     </script>
 </body>
 </html>
