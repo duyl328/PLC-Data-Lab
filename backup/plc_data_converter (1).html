@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通用PLC数据转换工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: auto;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .panel h3 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        select, input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+        }
+
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3, .grid-4 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button.secondary {
+            background: linear-gradient(45deg, #718096, #2d3748);
+        }
+
+        button.success {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+        }
+
+        button.warning {
+            background: linear-gradient(45deg, #ed8936, #dd6b20);
+        }
+
+        .result-panel {
+            grid-column: 1 / -1;
+        }
+
+        .result {
+            background: linear-gradient(135deg, #f0fff4, #e6fffa);
+            border: 2px solid #48bb78;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .error {
+            background: linear-gradient(135deg, #fed7d7, #ffeaea);
+            border-color: #f56565;
+            color: #c53030;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+            background: #f7fafc;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .preset-card {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .preset-card:hover {
+            border-color: #667eea;
+            background: #eef2ff;
+            transform: translateY(-2px);
+        }
+
+        .preset-card.active {
+            border-color: #667eea;
+            background: #eef2ff;
+        }
+
+        .preset-card h4 {
+            color: #4a5568;
+            margin-bottom: 5px;
+        }
+
+        .preset-card p {
+            color: #718096;
+            font-size: 12px;
+        }
+
+        .format-examples {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #667eea;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .bit-display {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            margin: 10px 0;
+        }
+
+        .bit {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            padding: 8px 4px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .bit.set {
+            background: #48bb78;
+            color: white;
+        }
+
+        .floating-help {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        .help-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .help-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 通用PLC数据转换工具</h1>
+            <p>支持所有主流PLC品牌和数据格式的专业转换工具</p>
+        </div>
+
+        <div class="main-grid">
+            <!-- 左侧：配置面板 -->
+            <div class="panel">
+                <h3><span class="icon">⚙️</span>转换配置</h3>
+                
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('basic')">基础转换</div>
+                    <div class="tab" onclick="switchTab('advanced')">高级选项</div>
+                    <div class="tab" onclick="switchTab('presets')">预设配置</div>
+                </div>
+
+                <!-- 基础转换 -->
+                <div id="basic" class="tab-content active">
+                    <div class="form-group">
+                        <label>PLC品牌</label>
+                        <select id="plcBrand" onchange="updatePresets()">
+                            <option value="omron">欧姆龙 (Omron)</option>
+                            <option value="siemens">西门子 (Siemens)</option>
+                            <option value="mitsubishi">三菱 (Mitsubishi)</option>
+                            <option value="ab">罗克韦尔 (Allen-Bradley)</option>
+                            <option value="schneider">施耐德 (Schneider)</option>
+                            <option value="delta">台达 (Delta)</option>
+                            <option value="keyence">基恩士 (Keyence)</option>
+                            <option value="panasonic">松下 (Panasonic)</option>
+                            <option value="custom">自定义</option>
+                        </select>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>源数据类型</label>
+                            <select id="sourceType">
+                                <option value="ushort">USHORT (16位)</option>
+                                <option value="short">SHORT (16位)</option>
+                                <option value="uint">UINT (32位)</option>
+                                <option value="int">INT (32位)</option>
+                                <option value="ulong">ULONG (64位)</option>
+                                <option value="long">LONG (64位)</option>
+                                <option value="byte">BYTE (8位)</option>
+                                <option value="bool">BOOL (1位)</option>
+                                <option value="real">REAL (32位浮点)</option>
+                                <option value="double">DOUBLE (64位浮点)</option>
+                                <option value="string">STRING</option>
+                                <option value="raw">原始数据</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>目标数据类型</label>
+                            <select id="targetType">
+                                <option value="int">INT (32位)</option>
+                                <option value="uint">UINT (32位)</option>
+                                <option value="short">SHORT (16位)</option>
+                                <option value="ushort">USHORT (16位)</option>
+                                <option value="long">LONG (64位)</option>
+                                <option value="ulong">ULONG (64位)</option>
+                                <option value="byte">BYTE (8位)</option>
+                                <option value="bool">BOOL (1位)</option>
+                                <option value="real">REAL (32位浮点)</option>
+                                <option value="double">DOUBLE (64位浮点)</option>
+                                <option value="string">STRING</option>
+                                <option value="hex">十六进制</option>
+                                <option value="binary">二进制</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label>字节序</label>
+                            <select id="byteOrder">
+                                <option value="ABCD">ABCD (大端序)</option>
+                                <option value="DCBA">DCBA (小端序)</option>
+                                <option value="BADC">BADC (混合序1)</option>
+                                <option value="CDAB">CDAB (混合序2)</option>
+                                <option value="auto">自动检测</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>位序</label>
+                            <select id="bitOrder">
+                                <option value="msb">MSB优先</option>
+                                <option value="lsb">LSB优先</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>数据格式</label>
+                            <select id="dataFormat">
+                                <option value="decimal">十进制</option>
+                                <option value="hex">十六进制</option>
+                                <option value="binary">二进制</option>
+                                <option value="array">数组</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 高级选项 -->
+                <div id="advanced" class="tab-content">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>偏移量 (字节)</label>
+                            <input type="number" id="offset" value="0" min="0">
+                        </div>
+
+                        <div class="form-group">
+                            <label>数据长度限制</label>
+                            <input type="number" id="lengthLimit" value="0" min="0" placeholder="0=无限制">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="signedData" checked>
+                            有符号数据
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="reverseOrder">
+                            反转数组顺序
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="ignoreErrors">
+                            忽略转换错误
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>浮点数精度</label>
+                        <input type="number" id="precision" value="6" min="0" max="15">
+                    </div>
+
+                    <div class="form-group">
+                        <label>字符串编码</label>
+                        <select id="encoding">
+                            <option value="utf8">UTF-8</option>
+                            <option value="ascii">ASCII</option>
+                            <option value="gbk">GBK</option>
+                            <option value="unicode">Unicode</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 预设配置 -->
+                <div id="presets" class="tab-content">
+                    <div class="preset-grid" id="presetGrid">
+                        <!-- 预设配置将在这里动态生成 -->
+                    </div>
+
+                    <div class="button-group">
+                        <button onclick="saveCurrentPreset()">💾 保存当前配置</button>
+                        <button onclick="loadPreset()" class="secondary">📁 加载配置文件</button>
+                        <input type="file" id="fileInput" style="display:none" accept=".json">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button onclick="convertData()">🔄 转换数据</button>
+                    <button onclick="autoDetect()" class="warning">🔍 自动检测</button>
+                    <button onclick="clearAll()" class="secondary">🗑️ 清空</button>
+                </div>
+            </div>
+
+            <!-- 右侧：数据输入面板 -->
+            <div class="panel">
+                <h3><span class="icon">📥</span>数据输入</h3>
+                
+                <div class="form-group">
+                    <label>原始数据</label>
+                    <textarea id="inputData" placeholder="输入你的PLC数据，支持多种格式：
+[256,0,256,0,256,0]
+256,0,256,0,256,0
+0x0100,0x0000,0x0100
+01000000 00000000...">[256,0,256,0,256,0,256,0,256,0]</textarea>
+                </div>
+
+                <div class="button-group">
+                    <button onclick="loadSampleData()" class="secondary">📝 加载示例</button>
+                    <button onclick="importFromFile()" class="secondary">📂 从文件导入</button>
+                    <button onclick="formatInput()">🎨 格式化</button>
+                </div>
+
+                <div class="format-examples">
+                    <strong>支持的输入格式：</strong><br>
+                    数组: [1,2,3] 或 1,2,3<br>
+                    十六进制: 0x01,0x02 或 01 02<br>
+                    二进制: 00000001 00000010<br>
+                    混合: 1 0x02 00000011
+                </div>
+
+                <!-- 位编辑器 -->
+                <div class="form-group">
+                    <label>位编辑器 <small>(点击切换位状态)</small></label>
+                    <div id="bitEditor" class="bit-display">
+                        <!-- 位显示将在这里动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 结果面板 -->
+        <div class="panel result-panel">
+            <h3><span class="icon">📤</span>转换结果</h3>
+            
+            <div class="button-group">
+                <button onclick="exportResult()" class="success">💾 导出结果</button>
+                <button onclick="copyToClipboard()" class="success">📋 复制到剪贴板</button>
+                <button onclick="showComparison()" class="secondary">🔍 显示对比</button>
+            </div>
+
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <!-- 浮动帮助按钮 -->
+    <div class="floating-help" onclick="toggleHelp()">❓</div>
+
+    <!-- 帮助面板 -->
+    <div class="help-panel" id="helpPanel" onclick="toggleHelp()">
+        <div class="help-content" onclick="event.stopPropagation()">
+            <h2>📚 使用帮助</h2>
+            <h3>PLC品牌特色：</h3>
+            <ul>
+                <li><strong>欧姆龙:</strong> 通常使用小端序，支持CJ/CP/CS系列</li>
+                <li><strong>西门子:</strong> S7系列，大端序为主</li>
+                <li><strong>三菱:</strong> FX/Q系列，混合字节序常见</li>
+                <li><strong>AB:</strong> CompactLogix/ControlLogix，小端序</li>
+                <li><strong>施耐德:</strong> Modicon系列，大端序</li>
+            </ul>
+            
+            <h3>数据类型说明：</h3>
+            <ul>
+                <li><strong>BOOL:</strong> 1位布尔值</li>
+                <li><strong>BYTE:</strong> 8位无符号整数 (0-255)</li>
+                <li><strong>USHORT:</strong> 16位无符号整数 (0-65535)</li>
+                <li><strong>INT:</strong> 32位有符号整数</li>
+                <li><strong>REAL:</strong> 32位IEEE754浮点数</li>
+            </ul>
+
+            <h3>字节序说明：</h3>
+            <ul>
+                <li><strong>ABCD:</strong> 大端序，高字节在前</li>
+                <li><strong>DCBA:</strong> 小端序，低字节在前</li>
+                <li><strong>BADC/CDAB:</strong> 字节对调的混合模式</li>
+            </ul>
+
+            <button onclick="toggleHelp()" style="margin-top: 20px;">关闭帮助</button>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentPresets = {};
+        let conversionHistory = [];
+
+        // PLC品牌预设配置
+        const plcPresets = {
+            omron: {
+                name: "欧姆龙默认",
+                byteOrder: "DCBA",
+                bitOrder: "lsb",
+                signed: true,
+                description: "适用于CJ/CP/CS系列"
+            },
+            siemens: {
+                name: "西门子默认", 
+                byteOrder: "ABCD",
+                bitOrder: "msb",
+                signed: true,
+                description: "适用于S7-300/400/1500"
+            },
+            mitsubishi: {
+                name: "三菱默认",
+                byteOrder: "BADC", 
+                bitOrder: "lsb",
+                signed: true,
+                description: "适用于FX/Q系列"
+            },
+            ab: {
+                name: "AB默认",
+                byteOrder: "DCBA",
+                bitOrder: "lsb", 
+                signed: true,
+                description: "适用于CompactLogix"
+            },
+            schneider: {
+                name: "施耐德默认",
+                byteOrder: "ABCD",
+                bitOrder: "msb",
+                signed: true,
+                description: "适用于Modicon系列"
+            }
+        };
+
+        // 初始化
+        window.onload = function() {
+            updatePresets();
+            updateBitEditor();
+            loadSampleData();
+        };
+
+        // 切换标签页
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // 更新预设配置
+        function updatePresets() {
+            const brand = document.getElementById('plcBrand').value;
+            const presetGrid = document.getElementById('presetGrid');
+            
+            presetGrid.innerHTML = '';
+            
+            Object.entries(plcPresets).forEach(([key, preset]) => {
+                const card = document.createElement('div');
+                card.className = 'preset-card';
+                if (key === brand) card.classList.add('active');
+                
+                card.innerHTML = `
+                    <h4>${preset.name}</h4>
+                    <p>${preset.description}</p>
+                `;
+                
+                card.onclick = () => applyPreset(key);
+                presetGrid.appendChild(card);
+            });
+        }
+
+        // 应用预设配置
+        function applyPreset(presetKey) {
+            const preset = plcPresets[presetKey];
+            if (!preset) return;
+            
+            document.getElementById('byteOrder').value = preset.byteOrder;
+            document.getElementById('bitOrder').value = preset.bitOrder;
+            document.getElementById('signedData').checked = preset.signed;
+            document.getElementById('plcBrand').value = presetKey;
+            
+            updatePresets();
+        }
+
+        // 加载示例数据
+        function loadSampleData() {
+            const samples = [
+                "[256,0,256,0,256,0,256,0,256,0]",
+                "0x0100,0x0000,0x0100,0x0000",
+                "1,0,1,0,1,0,1,0,1,0",
+                "00000001 00000000 00000001 00000000"
+            ];
+            
+            const randomSample = samples[Math.floor(Math.random() * samples.length)];
+            document.getElementById('inputData').value = randomSample;
+        }
+
+        // 解析输入数据
+        function parseInputData(input) {
+            input = input.trim();
+            
+            // 移除数组括号
+            if (input.startsWith('[') && input.endsWith(']')) {
+                input = input.slice(1, -1);
+            }
+            
+            // 分割数据
+            let values = [];
+            
+            if (input.includes(',')) {
+                values = input.split(',');
+            } else {
+                values = input.split(/\s+/);
+            }
+            
+            // 解析每个值
+            return values.map(val => {
+                val = val.trim();
+                if (val.startsWith('0x') || val.startsWith('0X')) {
+                    return parseInt(val, 16);
+                } else if (/^[01]+$/.test(val) && val.length > 4) {
+                    return parseInt(val, 2);
+                } else {
+                    return parseInt(val, 10);
+                }
+            }).filter(val => !isNaN(val));
+        }
+
+        // 主要转换函数
+        function convertData() {
+            const inputData = document.getElementById('inputData').value;
+            const sourceType = document.getElementById('sourceType').value;
+            const targetType = document.getElementById('targetType').value;
+            const byteOrder = document.getElementById('byteOrder').value;
+            const signed = document.getElementById('signedData').checked;
+            const resultDiv = document.getElementById('result');
+
+            try {
+                const parsedData = parseInputData(inputData);
+                if (parsedData.length === 0) {
+                    throw new Error('无法解析输入数据');
+                }
+
+                let result;
+                
+                // 根据转换类型进行处理
+                if (sourceType === 'ushort' && targetType === 'int') {
+                    result = convertUshortToInt(parsedData, byteOrder, signed);
+                } else if (sourceType === 'int' && targetType === 'ushort') {
+                    result = convertIntToUshort(parsedData, byteOrder);
+                } else if (targetType === 'real') {
+                    result = convertToFloat(parsedData, byteOrder);
+                } else if (targetType === 'double') {
+                    result = convertToDouble(parsedData, byteOrder);
+                } else if (targetType === 'hex') {
+                    result = convertToHex(parsedData);
+                } else if (targetType === 'binary') {
+                    result = convertToBinary(parsedData);
+                } else if (targetType === 'bool') {
+                    result = convertToBool(parsedData);
+                } else {
+                    result = convertGeneric(parsedData, sourceType, targetType, byteOrder, signed);
+                }
+
+                displayResult(result, parsedData, sourceType, targetType, byteOrder);
+                updateBitEditor(parsedData[0] || 0);
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">转换错误: ${error.message}</div>`;
+            }
+        }
+
+        // 转换函数实现
+        function convertUshortToInt(ushortArray, byteOrder, signed = true) {
+            if (ushortArray.length % 2 !== 0) {
+                throw new Error('USHORT到INT转换需要偶数个数据');
+            }
+            
+            const intArray = [];
+            
+            for (let i = 0; i < ushortArray.length; i += 2) {
+                const low = ushortArray[i];
+                const high = ushortArray[i + 1];
+                
+                let intValue;
+                switch (byteOrder) {
+                    case 'ABCD':
+                        intValue = (high << 16) | low;
+                        break;
+                    case 'DCBA':
+                        intValue = (low << 16) | high;
+                        break;
+                    case 'BADC':
+                        intValue = ((low & 0xFF) << 24) | (((low >> 8) & 0xFF) << 16) | 
+                                  ((high & 0xFF) << 8) | ((high >> 8) & 0xFF);
+                        break;
+                    case 'CDAB':
+                        intValue = ((high & 0xFF) << 24) | (((high >> 8) & 0xFF) << 16) | 
+                                  ((low & 0xFF) << 8) | ((low >> 8) & 0xFF);
+                        break;
+                    default:
+                        intValue = (low << 16) | high;
+                }
+                
+                if (signed && intValue > 0x7FFFFFFF) {
+                    intValue = intValue - 0x100000000;
+                }
+                
+                intArray.push(intValue);
+            }
+            
+            return intArray;
+        }
+
+        function convertIntToUshort(intArray, byteOrder) {
+            const ushortArray = [];
+            
+            intArray.forEach(intValue => {
+                const uintValue = intValue >>> 0;
+                
+                switch (byteOrder) {
+                    case 'ABCD':
+                        ushortArray.push(uintValue & 0xFFFF);
+                        ushortArray.push((uintValue >> 16) & 0xFFFF);
+                        break;
+                    case 'DCBA':
+                        ushortArray.push((uintValue >> 16) & 0xFFFF);
+                        ushortArray.push(uintValue & 0xFFFF);
+                        break;
+                    default:
+                        ushortArray.push((uintValue >> 16) & 0xFFFF);
+                        ushortArray.push(uintValue & 0xFFFF);
+                }
+            });
+            
+            return ushortArray;
+        }
+
+        function convertToFloat(data, byteOrder) {
+            const floatArray = [];
+            
+            for (let i = 0; i < data.length; i += 2) {
+                if (i + 1 >= data.length) break;
+                
+                const intValue = convertUshortToInt([data[i], data[i + 1]], byteOrder, false)[0];
+                const buffer = new ArrayBuffer(4);
+                const intView = new Uint32Array(buffer);
+                const floatView = new Float32Array(buffer);
+                
+                intView[0] = intValue;
+                floatArray.push(floatView[0]);
+            }
+            
+            return floatArray;
+        }
+
+        function convertToDouble(data, byteOrder) {
+            const doubleArray = [];
+            
+            for (let i = 0; i < data.length; i += 4) {
+                if (i + 3 >= data.length) break;
+                
+                // 64位双精度需要4个16位数据
+                const part1 = convertUshortToInt([data[i], data[i + 1]], byteOrder, false)[0];
+                const part2 = convertUshortToInt([data[i + 2], data[i + 3]], byteOrder, false)[0];
+                
+                const buffer = new ArrayBuffer(8);
+                const intView = new Uint32Array(buffer);
+                const doubleView = new Float64Array(buffer);
+                
+                if (byteOrder === 'ABCD' || byteOrder === 'BADC') {
+                    intView[1] = part1;
+                    intView[0] = part2;
+                } else {
+                    intView[0] = part1;
+                    intView[1] = part2;
+                }
+                
+                doubleArray.push(doubleView[0]);
+            }
+            
+            return doubleArray;
+        }
+
+        function convertToHex(data) {
+            return data.map(val => '0x' + val.toString(16).toUpperCase().padStart(4, '0'));
+        }
+
+        function convertToBinary(data) {
+            return data.map(val => val.toString(2).padStart(16, '0'));
+        }
+
+        function convertToBool(data) {
+            return data.map(val => val !== 0);
+        }
+
+        function convertGeneric(data, sourceType, targetType, byteOrder, signed) {
+            // 通用转换逻辑
+            return data.map(val => {
+                switch (targetType) {
+                    case 'byte':
+                        return val & 0xFF;
+                    case 'short':
+                        return signed && val > 32767 ? val - 65536 : val;
+                    case 'ushort':
+                        return val & 0xFFFF;
+                    case 'uint':
+                        return val >>> 0;
+                    case 'long':
+                    case 'ulong':
+                        return val;
+                    default:
+                        return val;
+                }
+            });
+        }
+
+        // 自动检测最佳配置
+        function autoDetect() {
+            const inputData = document.getElementById('inputData').value;
+            const parsedData = parseInputData(inputData);
+            
+            if (parsedData.length === 0) return;
+            
+            const resultDiv = document.getElementById('result');
+            let bestFormat = 'DCBA';
+            let bestResults = {};
+            
+            // 测试所有字节序格式
+            const formats = ['ABCD', 'DCBA', 'BADC', 'CDAB'];
+            
+            let analysisResult = '<div class="result"><strong>🔍 自动检测结果:</strong>\n\n';
+            
+            formats.forEach(format => {
+                try {
+                    if (parsedData.length % 2 === 0) {
+                        const converted = convertUshortToInt(parsedData, format);
+                        bestResults[format] = converted;
+                        
+                        const score = analyzePattern(converted);
+                        analysisResult += `${format}: [${converted.slice(0, 5).join(', ')}${converted.length > 5 ? '...' : ''}] (评分: ${score})\n`;
+                        
+                        if (score > (bestResults[bestFormat] ? analyzePattern(bestResults[bestFormat]) : 0)) {
+                            bestFormat = format;
+                        }
+                    }
+                } catch (error) {
+                    analysisResult += `${format}: 转换失败\n`;
+                }
+            });
+            
+            analysisResult += `\n推荐使用: ${bestFormat} ✅\n`;
+            analysisResult += '</div>';
+            
+            // 应用最佳配置
+            document.getElementById('byteOrder').value = bestFormat;
+            
+            resultDiv.innerHTML = analysisResult;
+        }
+
+        // 分析数据模式评分
+        function analyzePattern(data) {
+            let score = 0;
+            
+            // 检查重复模式
+            const uniqueValues = new Set(data);
+            if (uniqueValues.size < data.length / 2) score += 10;
+            
+            // 检查合理范围
+            const maxVal = Math.max(...data);
+            const minVal = Math.min(...data);
+            if (maxVal < 10000 && minVal >= 0) score += 20;
+            
+            // 检查序列模式
+            let isSequential = true;
+            for (let i = 1; i < data.length; i++) {
+                if (Math.abs(data[i] - data[i-1]) > 100) {
+                    isSequential = false;
+                    break;
+                }
+            }
+            if (isSequential) score += 15;
+            
+            return score;
+        }
+
+        // 显示转换结果
+        function displayResult(result, originalData, sourceType, targetType, byteOrder) {
+            const resultDiv = document.getElementById('result');
+            const precision = parseInt(document.getElementById('precision').value);
+            
+            let formattedResult;
+            if (targetType === 'real' || targetType === 'double') {
+                formattedResult = result.map(val => val.toFixed(precision)).join(', ');
+            } else if (targetType === 'hex') {
+                formattedResult = result.join(', ');
+            } else if (targetType === 'binary') {
+                formattedResult = result.join(' ');
+            } else if (targetType === 'bool') {
+                formattedResult = result.map(val => val ? 'True' : 'False').join(', ');
+            } else {
+                formattedResult = result.join(', ');
+            }
+            
+            const verification = verifyConversion(result, originalData, sourceType, targetType, byteOrder);
+            
+            resultDiv.innerHTML = `<div class="result">
+<strong>✅ 转换成功:</strong>
+源数据 (${sourceType}): [${originalData.join(', ')}]
+转换结果 (${targetType}): [${formattedResult}]
+
+<strong>转换参数:</strong>
+字节序: ${byteOrder}
+数据长度: ${originalData.length} → ${result.length}
+${verification}
+
+<strong>详细分析:</strong>
+${getDetailedAnalysis(originalData, result, sourceType, targetType, byteOrder)}
+            </div>`;
+        }
+
+        // 验证转换结果
+        function verifyConversion(result, originalData, sourceType, targetType, byteOrder) {
+            if (sourceType === 'ushort' && targetType === 'int' && originalData.length % 2 === 0) {
+                try {
+                    const backToUshort = convertIntToUshort(result, byteOrder);
+                    const matches = JSON.stringify(backToUshort) === JSON.stringify(originalData);
+                    return `反向验证: ${matches ? '✅ 通过' : '❌ 失败'}`;
+                } catch (error) {
+                    return `反向验证: ❌ 错误 - ${error.message}`;
+                }
+            }
+            return '验证: ℹ️ 不适用此转换类型';
+        }
+
+        // 获取详细分析
+        function getDetailedAnalysis(originalData, result, sourceType, targetType, byteOrder) {
+            let analysis = '';
+            
+            if (sourceType === 'ushort' && targetType === 'int') {
+                for (let i = 0; i < Math.min(originalData.length / 2, 3); i++) {
+                    const idx = i * 2;
+                    if (idx + 1 < originalData.length && i < result.length) {
+                        const low = originalData[idx];
+                        const high = originalData[idx + 1];
+                        const intVal = result[i];
+                        
+                        analysis += `第${i + 1}组: [${low}, ${high}] → ${intVal} `;
+                        analysis += `(0x${low.toString(16).padStart(4, '0')}, 0x${high.toString(16).padStart(4, '0')} → 0x${(intVal >>> 0).toString(16).padStart(8, '0')})\n`;
+                    }
+                }
+            }
+            
+            return analysis || '数据转换完成';
+        }
+
+        // 更新位编辑器
+        function updateBitEditor(value = 0) {
+            const bitEditor = document.getElementById('bitEditor');
+            bitEditor.innerHTML = '';
+            
+            for (let i = 15; i >= 0; i--) {
+                const bit = document.createElement('div');
+                bit.className = 'bit';
+                bit.textContent = ((value >> i) & 1).toString();
+                bit.title = `位 ${i}`;
+                
+                if ((value >> i) & 1) {
+                    bit.classList.add('set');
+                }
+                
+                bit.onclick = () => toggleBit(i);
+                bitEditor.appendChild(bit);
+            }
+        }
+
+        // 切换位状态
+        function toggleBit(bitIndex) {
+            const inputData = document.getElementById('inputData').value;
+            const parsedData = parseInputData(inputData);
+            
+            if (parsedData.length > 0) {
+                parsedData[0] ^= (1 << bitIndex);
+                document.getElementById('inputData').value = '[' + parsedData.join(',') + ']';
+                updateBitEditor(parsedData[0]);
+            }
+        }
+
+        // 格式化输入
+        function formatInput() {
+            const input = document.getElementById('inputData').value;
+            const parsed = parseInputData(input);
+            document.getElementById('inputData').value = '[' + parsed.join(', ') + ']';
+        }
+
+        // 复制到剪贴板
+        function copyToClipboard() {
+            const resultDiv = document.getElementById('result');
+            if (resultDiv.textContent) {
+                navigator.clipboard.writeText(resultDiv.textContent).then(() => {
+                    alert('结果已复制到剪贴板！');
+                });
+            }
+        }
+
+        // 导出结果
+        function exportResult() {
+            const resultDiv = document.getElementById('result');
+            if (!resultDiv.textContent) {
+                alert('没有可导出的结果');
+                return;
+            }
+            
+            const data = {
+                timestamp: new Date().toISOString(),
+                input: document.getElementById('inputData').value,
+                result: resultDiv.textContent,
+                config: {
+                    plcBrand: document.getElementById('plcBrand').value,
+                    sourceType: document.getElementById('sourceType').value,
+                    targetType: document.getElementById('targetType').value,
+                    byteOrder: document.getElementById('byteOrder').value
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `plc_conversion_${new Date().getTime()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 清空所有数据
+        function clearAll() {
+            document.getElementById('inputData').value = '';
+            document.getElementById('result').innerHTML = '';
+            updateBitEditor(0);
+        }
+
+        // 显示对比
+        function showComparison() {
+            // 实现数据对比功能
+            alert('对比功能开发中...');
+        }
+
+        // 切换帮助面板
+        function toggleHelp() {
+            const helpPanel = document.getElementById('helpPanel');
+            helpPanel.style.display = helpPanel.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        // 从文件导入
+        function importFromFile() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.txt,.csv,.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('inputData').value = e.target.result;
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        // 保存当前预设
+        function saveCurrentPreset() {
+            const name = prompt('请输入预设名称:');
+            if (name) {
+                const config = {
+                    name: name,
+                    plcBrand: document.getElementById('plcBrand').value,
+                    sourceType: document.getElementById('sourceType').value,
+                    targetType: document.getElementById('targetType').value,
+                    byteOrder: document.getElementById('byteOrder').value,
+                    signed: document.getElementById('signedData').checked
+                };
+                
+                localStorage.setItem('plc_preset_' + name, JSON.stringify(config));
+                alert('预设已保存！');
+            }
+        }
+
+        // 页面加载时自动转换示例数据
+        setTimeout(() => {
+            convertData();
+        }, 500);
+    </script>
+</body>
+</html>

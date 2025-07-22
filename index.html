@@ -1,0 +1,2390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能PLC数据格式转换与调试工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .input-section, .control-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 1px solid #e0e6ed;
+        }
+        
+        .section-title {
+            font-size: 1.4em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+        
+        .btn-smart {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        /* 智能检测面板样式 - 紧凑版 */
+        .smart-detection {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border: 2px solid #17a2b8;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .smart-detection::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #17a2b8, #138496);
+        }
+        
+        .detection-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .detection-results {
+            display: grid;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .detection-results::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .detection-results::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .detection-results::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        
+        .detection-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+        
+        .detection-category {
+            font-weight: 600;
+            color: #495057;
+            margin-top: 8px;
+            margin-bottom: 4px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .confidence-high {
+            border-left: 3px solid #28a745;
+            background: linear-gradient(90deg, rgba(40, 167, 69, 0.08), white);
+        }
+        
+        .confidence-medium {
+            border-left: 3px solid #ffc107;
+            background: linear-gradient(90deg, rgba(255, 193, 7, 0.08), white);
+        }
+        
+        .confidence-low {
+            border-left: 3px solid #dc3545;
+            background: linear-gradient(90deg, rgba(220, 53, 69, 0.08), white);
+        }
+        
+        .confidence-badge {
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .badge-high {
+            background: #28a745;
+        }
+        
+        .badge-medium {
+            background: #ffc107;
+        }
+        
+        .badge-low {
+            background: #dc3545;
+        }
+        
+        .recommendation-panel {
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+            border: 2px solid #28a745;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: #155724;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .recommended-item {
+            background: white;
+            border: 1px solid #c3e6cb;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 8px 0;
+            position: relative;
+            font-size: 13px;
+        }
+        
+        .recommended-badge {
+            position: absolute;
+            top: -6px;
+            right: 10px;
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        .results-section {
+            grid-column: 1 / -1;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 1px solid #e0e6ed;
+            margin-top: 20px;
+        }
+        
+        .results-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #7f8c8d;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .tab-btn.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+        
+        .tab-btn.smart {
+            color: #e74c3c;
+        }
+        
+        .tab-btn.smart.active {
+            border-bottom-color: #e74c3c;
+        }
+        
+        /* Tab计数器样式 */
+        .tab-counter {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .result-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .result-item:hover {
+            background: #e3f2fd;
+            border-color: #3498db;
+            transform: translateY(-2px);
+        }
+        
+        .result-item.recommended {
+            border: 2px solid #28a745;
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), #f8f9fa);
+        }
+        
+        .result-item.failed {
+            opacity: 0.5;
+            border-color: #dc3545;
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), #f8f9fa);
+        }
+        
+        .result-header {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .result-header-sub{
+            /*max-width: 210px;*/
+        }
+        
+        .result-value {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: white;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            word-break: break-all;
+            font-size: 13px;
+        }
+        
+        .copy-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .copy-btn:hover {
+            background: #138496;
+        }
+        
+        .details-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 4px;
+        }
+        
+        .details-btn:hover {
+            background: #1e7e34;
+        }
+        
+        .success-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .success-indicator.success {
+            background: #28a745;
+        }
+        
+        .success-indicator.warning {
+            background: #ffc107;
+        }
+        
+        .success-indicator.error {
+            background: #dc3545;
+        }
+        
+        /* 详情模态框样式 - 增大尺寸 */
+        .details-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 95%;
+            max-width: 1200px;
+            max-height: 95vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            transform: rotate(90deg);
+            opacity: 0.7;
+        }
+        
+        .modal-body {
+            padding: 25px 30px;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+        
+        .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        /* 详情内容样式 */
+        .detail-section {
+            margin-bottom: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .detail-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .byteorder-test {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .byteorder-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .byteorder-item:last-child {
+            border-bottom: none;
+        }
+        
+        .byteorder-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .byteorder-value {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: #f1f3f4;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .byteorder-status {
+            font-size: 18px;
+        }
+        
+        .principle-box {
+            background: #e8f5e8;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .principle-item {
+            margin: 8px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .principle-item strong {
+            min-width: 100px;
+            color: #155724;
+        }
+        
+        .memory-layout {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        
+        .memory-step {
+            margin: 5px 0;
+            padding: 5px 0;
+        }
+        
+        .memory-bytes {
+            background: #fff;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            display: inline-block;
+            margin: 0 5px;
+            font-weight: 600;
+        }
+        
+        /* 原始数据展示样式 */
+        .process-step {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .process-step:hover {
+            background: #e3f2fd;
+            border-color: #3498db;
+            transform: translateX(5px);
+        }
+        
+        .step-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .step-content {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            word-break: break-all;
+            color: #495057;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .error {
+            color: #e74c3c;
+            background: #fadbd8;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .statistics-panel {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ffecb5;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #856404;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+        
+        /* 自动选择提示 */
+        .auto-select-notice {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin: 10px 0;
+            font-size: 12px;
+            color: #0c5460;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .auto-select-notice::before {
+            content: 'ℹ️';
+        }
+        
+        /* 禁用body滚动 */
+        .modal-open {
+            overflow: hidden;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .container {
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                width: 98%;
+                margin: 1% auto;
+            }
+            
+            .modal-header {
+                padding: 15px 20px;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PLC数据格式转换工具</h1>
+            <p>数据格式检测、转换与智能推荐系统</p>
+        </div>
+        
+        <div class="main-content">
+            <!-- 数据输入区 -->
+            <div class="input-section">
+                <div class="section-title">
+                    📥 数据输入区
+                </div>
+                
+                <div class="form-group">
+                    <label>输入格式选择：</label>
+                    <select id="inputFormat">
+                        <option value="byte">byte[] (0-255)</option>
+                        <option value="ushort" selected>ushort[] (0-65535)</option>
+                        <option value="short">short[] (-32768 to 32767)</option>
+                        <option value="int">int[] (-2147483648 to 2147483647)</option>
+                        <option value="uint">uint[] (0 to 4294967295)</option>
+                        <option value="hex">Hex 字符串</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>原始数据输入：</label>
+                    <textarea id="rawData" placeholder="示例：[13312,0,16128,0,13312,0,8704,0,5888,0]&#10;或者：0x3400,0x0000,0x3F00,0x0000&#10;支持逗号、空格、换行分隔"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn btn-smart" onclick="intelligentAnalysis()">🧠 智能分析</button>
+                    <button class="btn" onclick="parseInput()">📊 解析数据</button>
+                    <button class="btn btn-secondary" onclick="clearInput()">🗑️ 清空</button>
+                </div>
+                
+                <div id="inputValidation"></div>
+                
+                <!-- 智能检测结果面板 - 移到输入区下方 -->
+                <div id="smartDetection" class="smart-detection" style="display: none;">
+                    <div class="detection-header">
+                        🔍 智能检测结果
+                    </div>
+                    <div id="detectionResults" class="detection-results"></div>
+                </div>
+            </div>
+            
+            <!-- 控制选项区 -->
+            <div class="control-section">
+                <div class="section-title">
+                    ⚙️ 转换控制
+                </div>
+                
+                <!-- 自动选择提示 -->
+                <div id="autoSelectNotice" class="auto-select-notice" style="display: none;">
+                    已根据智能检测结果自动选择最优配置
+                </div>
+                
+                <div class="form-group">
+                    <label>目标数据类型：</label>
+                    <select id="targetType" onchange="filterResults()">
+                        <option value="all">🔄 显示所有类型</option>
+                        <option value="bool">bool (布尔)</option>
+                        <option value="byte">byte (无符号8位)</option>
+                        <option value="sbyte">sbyte (有符号8位)</option>
+                        <option value="short">short (有符号16位)</option>
+                        <option value="ushort">ushort (无符号16位)</option>
+                        <option value="int">int (有符号32位)</option>
+                        <option value="uint">uint (无符号32位)</option>
+                        <option value="long">long (有符号64位)</option>
+                        <option value="ulong">ulong (无符号64位)</option>
+                        <option value="float">float (32位浮点)</option>
+                        <option value="double">double (64位浮点)</option>
+                        <option value="ascii">ASCII 字符串</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>字节序选择：</label>
+                    <select id="byteOrder" onchange="filterResults()">
+                        <option value="all">🔄 显示所有字节序</option>
+                        <option value="ABCD">ABCD (大端序)</option>
+                        <option value="DCBA">DCBA (小端序)</option>
+                        <option value="CDAB">CDAB (西门子常见)</option>
+                        <option value="BADC">BADC (欧姆龙常见)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>编码格式：</label>
+                    <select id="encoding" onchange="filterResults()">
+                        <option value="all">🔄 显示所有编码</option>
+                        <option value="DEC">DEC (十进制编码)</option>
+                        <option value="BCD">BCD (二进制编码十进制)</option>
+                        <option value="HEX">HEX (十六进制编码)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn btn-success" onclick="convertData()">🚀 开始转换</button>
+                </div>
+                
+                <!-- 推荐配置面板 -->
+                <div id="recommendationPanel" class="recommendation-panel" style="display: none;">
+                    <div class="recommendation-header">
+                        ⭐ 智能推荐配置
+                    </div>
+                    <div id="recommendedConfigs"></div>
+                    <button class="btn btn-success" onclick="applyRecommendation()">✅ 应用推荐配置</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 结果展示区 -->
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <div class="section-title">
+                📊 转换结果
+            </div>
+            
+            <!-- 统计信息面板 -->
+            <div id="statisticsPanel" class="statistics-panel" style="display: none;">
+                <h4>📈 转换统计</h4>
+                <div id="statisticsGrid" class="stats-grid"></div>
+            </div>
+            
+            <div class="results-tabs">
+                <button class="tab-btn smart active" onclick="switchTab('smart-results')">🧠 智能推荐</button>
+                <button class="tab-btn" onclick="switchTab('all-results')">
+                    全部结果
+                    <span class="tab-counter" id="allResultsCounter" style="display: none;">0</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('raw-data')">原始数据</button>
+            </div>
+            
+            <div id="smart-results" class="tab-content active">
+                <div id="smartResultsGrid" class="result-grid"></div>
+            </div>
+            
+            <div id="all-results" class="tab-content">
+                <div id="allResultsGrid" class="result-grid"></div>
+            </div>
+            
+            <div id="raw-data" class="tab-content">
+                <div id="rawDataDisplay"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情模态框 -->
+    <div id="detailsModal" class="details-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">转换详情</h2>
+                <button class="close-btn" onclick="closeDetailsModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- 详情内容将在这里动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = [];
+        let currentInputFormat = 'ushort';
+        let allResults = [];
+        let smartAnalysisResults = {};
+        let recommendedConfigs = [];
+        
+        // 智能分析函数
+        function intelligentAnalysis() {
+            if (!parseInput(false)) {
+                return;
+            }
+            
+            // 清空之前的结果
+            clearPreviousResults();
+            
+            // 执行智能检测
+            smartAnalysisResults = performSmartDetection();
+            
+            // 显示检测结果
+            displaySmartDetection();
+            
+            // 生成推荐配置
+            generateRecommendations();
+            
+            // 自动应用最佳配置
+            autoApplyBestConfig();
+            
+            // 自动转换并显示结果
+            convertData(true);
+        }
+        
+        // 自动应用最佳配置
+        function autoApplyBestConfig() {
+            let bestEncoding = null;
+            let bestEncodingScore = 0;
+            let bestByteOrder = null;
+            let bestByteOrderScore = 0;
+            let bestDataType = null;
+            let autoSelected = false;
+            
+            // 找出最佳编码格式（只选择高置信度的）
+            for (let [format, result] of Object.entries(smartAnalysisResults.encoding)) {
+                if (result.confidence === 'high' && result.score > bestEncodingScore) {
+                    bestEncoding = format;
+                    bestEncodingScore = result.score;
+                }
+            }
+            
+            // 找出最佳字节序（只选择高置信度的）
+            for (let [order, result] of Object.entries(smartAnalysisResults.byteOrder)) {
+                if (result.confidence === 'high' && result.score > bestByteOrderScore) {
+                    bestByteOrder = order;
+                    bestByteOrderScore = result.score;
+                }
+            }
+            
+            // 根据推荐配置确定最佳数据类型
+            if (recommendedConfigs.length > 0 && recommendedConfigs[0].confidence === 'high') {
+                bestDataType = recommendedConfigs[0].dataType;
+            }
+            
+            // 应用高置信度的配置
+            if (bestEncoding && bestEncodingScore > 80) {
+                document.getElementById('encoding').value = bestEncoding;
+                autoSelected = true;
+            }
+            
+            if (bestByteOrder && bestByteOrderScore > 70) {
+                document.getElementById('byteOrder').value = bestByteOrder;
+                autoSelected = true;
+            }
+            
+            if (bestDataType) {
+                document.getElementById('targetType').value = bestDataType;
+                autoSelected = true;
+            }
+            
+            // 显示自动选择提示
+            if (autoSelected) {
+                document.getElementById('autoSelectNotice').style.display = 'flex';
+                setTimeout(() => {
+                    document.getElementById('autoSelectNotice').style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        // 执行智能检测
+        function performSmartDetection() {
+            const bytes = convertToBytes(currentData, currentInputFormat);
+            const analysis = {
+                encoding: analyzeEncoding(bytes),
+                byteOrder: analyzeByteOrder(bytes),
+                dataType: analyzeDataType(bytes),
+                patterns: analyzePatterns(bytes)
+            };
+            
+            return analysis;
+        }
+        
+        // 分析编码格式
+        function analyzeEncoding(bytes) {
+            const results = {};
+            
+            // BCD检测
+            let bcdValid = true;
+            let bcdScore = 0;
+            for (let byte of bytes) {
+                const high = (byte >> 4) & 0xF;
+                const low = byte & 0xF;
+                if (high <= 9 && low <= 9) {
+                    bcdScore++;
+                } else {
+                    bcdValid = false;
+                    break;
+                }
+            }
+            
+            if (bcdValid && bytes.length > 0) {
+                results.BCD = {
+                    confidence: bcdScore === bytes.length ? 'high' : 'medium',
+                    score: (bcdScore / bytes.length) * 100,
+                    reason: `${bcdScore}/${bytes.length} 字节符合BCD格式`
+                };
+            } else {
+                results.BCD = {
+                    confidence: 'low',
+                    score: 0,
+                    reason: '存在非BCD格式字节'
+                };
+            }
+            
+            // ASCII检测
+            let asciiCount = 0;
+            let printableCount = 0;
+            for (let byte of bytes) {
+                if (byte >= 0 && byte <= 127) {
+                    asciiCount++;
+                    if (byte >= 32 && byte <= 126) {
+                        printableCount++;
+                    }
+                }
+            }
+            
+            const asciiRatio = asciiCount / bytes.length;
+            const printableRatio = printableCount / bytes.length;
+            
+            if (printableRatio > 0.7) {
+                results.ASCII = {
+                    confidence: 'high',
+                    score: printableRatio * 100,
+                    reason: `${printableCount}/${bytes.length} 字节为可打印字符`
+                };
+            } else if (asciiRatio > 0.8) {
+                results.ASCII = {
+                    confidence: 'medium',
+                    score: asciiRatio * 100,
+                    reason: `${asciiCount}/${bytes.length} 字节为ASCII字符`
+                };
+            } else {
+                results.ASCII = {
+                    confidence: 'low',
+                    score: asciiRatio * 100,
+                    reason: 'ASCII字符比例较低'
+                };
+            }
+            
+            // DEC检测（默认总是可能的）
+            results.DEC = {
+                confidence: 'high',
+                score: 100,
+                reason: '十进制编码始终有效'
+            };
+            
+            return results;
+        }
+        
+        // 分析字节序
+        function analyzeByteOrder(bytes) {
+            const results = {};
+            const byteOrders = ['ABCD', 'DCBA', 'CDAB', 'BADC'];
+            
+            // 尝试将字节转换为浮点数，看哪种字节序产生最合理的结果
+            for (let byteOrder of byteOrders) {
+                let validFloatCount = 0;
+                let reasonableFloatCount = 0;
+                let totalAttempts = 0;
+                
+                for (let i = 0; i < bytes.length - 3; i += 4) {
+                    try {
+                        const orderedBytes = applyByteOrder([bytes[i], bytes[i + 1], bytes[i + 2], bytes[i + 3]], byteOrder, 4);
+                        const buffer = new ArrayBuffer(4);
+                        const view = new DataView(buffer);
+                        for (let j = 0; j < 4; j++) {
+                            view.setUint8(j, orderedBytes[j]);
+                        }
+                        const floatValue = view.getFloat32(0, true);
+                        totalAttempts++;
+                        
+                        if (isFinite(floatValue) && !isNaN(floatValue)) {
+                            validFloatCount++;
+                            // 检查是否为合理的浮点数（不是极大或极小的数）
+                            if (Math.abs(floatValue) > 0.0001 && Math.abs(floatValue) < 1000000) {
+                                reasonableFloatCount++;
+                            }
+                        }
+                    } catch (error) {
+                        // 忽略转换错误
+                    }
+                }
+                
+                let confidence = 'low';
+                let score = 0;
+                let reason = '';
+                
+                if (totalAttempts > 0) {
+                    const validRatio = validFloatCount / totalAttempts;
+                    const reasonableRatio = reasonableFloatCount / totalAttempts;
+                    score = reasonableRatio * 100;
+                    
+                    if (reasonableRatio > 0.7) {
+                        confidence = 'high';
+                        reason = `${reasonableFloatCount}/${totalAttempts} 个浮点数转换合理`;
+                    } else if (validRatio > 0.5) {
+                        confidence = 'medium';
+                        reason = `${validFloatCount}/${totalAttempts} 个浮点数转换有效`;
+                    } else {
+                        reason = '浮点数转换效果不佳';
+                    }
+                } else {
+                    reason = '数据长度不足以进行浮点数分析';
+                }
+                
+                results[byteOrder] = {
+                    confidence: confidence,
+                    score: score,
+                    reason: reason
+                };
+            }
+            
+            return results;
+        }
+        
+        // 分析数据类型
+        function analyzeDataType(bytes) {
+            const results = {};
+            
+            // 检查16位整数的合理性
+            let reasonableShortCount = 0;
+            let totalShorts = 0;
+            for (let i = 0; i < bytes.length - 1; i += 2) {
+                const value = bytes[i] | (bytes[i + 1] << 8);
+                totalShorts++;
+                // 检查是否为合理的16位数值范围
+                if (value < 10000 && value > 0) {
+                    reasonableShortCount++;
+                }
+            }
+            
+            if (totalShorts > 0) {
+                const shortRatio = reasonableShortCount / totalShorts;
+                results.short = {
+                    confidence: shortRatio > 0.6 ? 'high' : shortRatio > 0.3 ? 'medium' : 'low',
+                    score: shortRatio * 100,
+                    reason: `${reasonableShortCount}/${totalShorts} 个16位值合理`
+                };
+            }
+            
+            // 检查字节级数据
+            let reasonableByteCount = 0;
+            for (let byte of bytes) {
+                if (byte > 0 && byte < 250) {
+                    reasonableByteCount++;
+                }
+            }
+            
+            const byteRatio = reasonableByteCount / bytes.length;
+            results.byte = {
+                confidence: byteRatio > 0.8 ? 'high' : byteRatio > 0.5 ? 'medium' : 'low',
+                score: byteRatio * 100,
+                reason: `${reasonableByteCount}/${bytes.length} 个字节值合理`
+            };
+            
+            return results;
+        }
+        
+        // 分析数据模式
+        function analyzePatterns(bytes) {
+            const patterns = {};
+            
+            // 检查重复模式
+            const counts = {};
+            for (let byte of bytes) {
+                counts[byte] = (counts[byte] || 0) + 1;
+            }
+            
+            const uniqueValues = Object.keys(counts).length;
+            const maxRepeats = Math.max(...Object.values(counts));
+            
+            patterns.repetition = {
+                uniqueValues: uniqueValues,
+                maxRepeats: maxRepeats,
+                entropy: uniqueValues / bytes.length
+            };
+            
+            // 检查零值模式
+            const zeroCount = counts[0] || 0;
+            patterns.zeros = {
+                count: zeroCount,
+                ratio: zeroCount / bytes.length
+            };
+            
+            return patterns;
+        }
+        
+        // 显示智能检测结果 - 紧凑版
+        function displaySmartDetection() {
+            const panel = document.getElementById('smartDetection');
+            const results = document.getElementById('detectionResults');
+            
+            let html = '';
+            
+            // 编码格式检测结果 - 只显示高置信度的
+            const highConfidenceEncodings = Object.entries(smartAnalysisResults.encoding)
+                .filter(([_, result]) => result.confidence !== 'low')
+                .sort((a, b) => b[1].score - a[1].score);
+            
+            if (highConfidenceEncodings.length > 0) {
+                html += '<div class="detection-category">编码格式</div>';
+                for (let [format, result] of highConfidenceEncodings.slice(0, 3)) {
+                    const confidenceClass = `confidence-${result.confidence}`;
+                    const badgeClass = `badge-${result.confidence}`;
+                    
+                    html += `
+                        <div class="detection-item ${confidenceClass}">
+                            <div>
+                                <strong>${format}</strong> - ${result.reason}
+                            </div>
+                            <div>
+                                <span class="confidence-badge ${badgeClass}">${Math.round(result.score)}%</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // 字节序检测结果 - 只显示高置信度的
+            const highConfidenceByteOrders = Object.entries(smartAnalysisResults.byteOrder)
+                .filter(([_, result]) => result.confidence !== 'low')
+                .sort((a, b) => b[1].score - a[1].score);
+                
+            if (highConfidenceByteOrders.length > 0) {
+                html += '<div class="detection-category">字节序</div>';
+                for (let [order, result] of highConfidenceByteOrders.slice(0, 3)) {
+                    const confidenceClass = `confidence-${result.confidence}`;
+                    const badgeClass = `badge-${result.confidence}`;
+                    
+                    html += `
+                        <div class="detection-item ${confidenceClass}">
+                            <div>
+                                <strong>${order}</strong> - ${result.reason}
+                            </div>
+                            <div>
+                                <span class="confidence-badge ${badgeClass}">${Math.round(result.score)}%</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            results.innerHTML = html || '<div class="detection-item">未发现高置信度的格式特征</div>';
+            panel.style.display = 'block';
+        }
+        
+        // 生成推荐配置
+        function generateRecommendations() {
+            recommendedConfigs = [];
+            
+            // 找出最佳编码格式
+            let bestEncoding = 'DEC';
+            let bestEncodingScore = 0;
+            for (let [format, result] of Object.entries(smartAnalysisResults.encoding)) {
+                if (result.score > bestEncodingScore && result.confidence !== 'low') {
+                    bestEncoding = format;
+                    bestEncodingScore = result.score;
+                }
+            }
+            
+            // 找出最佳字节序
+            let bestByteOrder = 'DCBA';
+            let bestByteOrderScore = 0;
+            for (let [order, result] of Object.entries(smartAnalysisResults.byteOrder)) {
+                if (result.score > bestByteOrderScore) {
+                    bestByteOrder = order;
+                    bestByteOrderScore = result.score;
+                }
+            }
+            
+            // 生成推荐配置
+            if (smartAnalysisResults.encoding.ASCII.confidence === 'high') {
+                recommendedConfigs.push({
+                    encoding: 'DEC',
+                    byteOrder: 'DCBA',
+                    dataType: 'ascii',
+                    reason: 'ASCII字符检测置信度高，推荐字符串解析',
+                    confidence: 'high'
+                });
+            }
+            
+            if (smartAnalysisResults.encoding.BCD.confidence === 'high') {
+                recommendedConfigs.push({
+                    encoding: 'BCD',
+                    byteOrder: bestByteOrder,
+                    dataType: 'uint',
+                    reason: 'BCD编码检测置信度高，推荐无符号整数',
+                    confidence: 'high'
+                });
+            }
+            
+            // 浮点数推荐
+            if (bestByteOrderScore > 50) {
+                recommendedConfigs.push({
+                    encoding: bestEncoding,
+                    byteOrder: bestByteOrder,
+                    dataType: 'float',
+                    reason: `${bestByteOrder}字节序浮点数转换效果最佳`,
+                    confidence: bestByteOrderScore > 70 ? 'high' : 'medium'
+                });
+            }
+            
+            // 整数推荐
+            if (smartAnalysisResults.dataType && smartAnalysisResults.dataType.short && 
+                smartAnalysisResults.dataType.short.confidence !== 'low') {
+                recommendedConfigs.push({
+                    encoding: bestEncoding,
+                    byteOrder: bestByteOrder,
+                    dataType: 'ushort',
+                    reason: '16位无符号整数解析效果较好',
+                    confidence: smartAnalysisResults.dataType.short.confidence
+                });
+            }
+            
+            // 显示推荐配置
+            displayRecommendations();
+        }
+        
+        // 显示推荐配置
+        function displayRecommendations() {
+            const panel = document.getElementById('recommendationPanel');
+            const container = document.getElementById('recommendedConfigs');
+            
+            if (recommendedConfigs.length === 0) {
+                panel.style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            recommendedConfigs.forEach((config, index) => {
+                const badgeText = config.confidence === 'high' ? '强烈推荐' : '推荐';
+                html += `
+                    <div class="recommended-item" data-index="${index}">
+                        <div class="recommended-badge">${badgeText}</div>
+                        <div>
+                            <strong>${config.dataType.toUpperCase()} - ${config.byteOrder} - ${config.encoding}</strong><br>
+                            <small>${config.reason}</small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            panel.style.display = 'block';
+        }
+        
+        // 应用推荐配置
+        function applyRecommendation() {
+            if (recommendedConfigs.length === 0) {
+                alert('没有推荐配置可应用');
+                return;
+            }
+            
+            // 应用第一个（最佳）推荐配置
+            const config = recommendedConfigs[0];
+            document.getElementById('targetType').value = config.dataType;
+            document.getElementById('byteOrder').value = config.byteOrder;
+            document.getElementById('encoding').value = config.encoding;
+            
+            // 自动转换
+            convertData(true);
+        }
+        
+        // 解析输入数据（增强版）
+        function parseInput(showMessage = true) {
+            const rawDataElement = document.getElementById('rawData');
+            const inputFormat = document.getElementById('inputFormat').value;
+            const validation = document.getElementById('inputValidation');
+            
+            try {
+                const inputText = rawDataElement.value.trim();
+                if (!inputText) {
+                    throw new Error('请输入数据');
+                }
+                
+                // 清空之前的结果
+                clearPreviousResults();
+                
+                let parsedData = [];
+                currentInputFormat = inputFormat;
+                
+                if (inputFormat === 'hex') {
+                    const hexPattern = /0x[0-9A-Fa-f]+|[0-9A-Fa-f]+/g;
+                    const hexMatches = inputText.match(hexPattern);
+                    if (!hexMatches) {
+                        throw new Error('无效的十六进制格式');
+                    }
+                    parsedData = hexMatches.map(hex => {
+                        const value = parseInt(hex.replace('0x', ''), 16);
+                        return value;
+                    });
+                } else {
+                    const cleanText = inputText.replace(/[\[\]]/g, '');
+                    const values = cleanText.split(/[,\s\n]+/).filter(v => v.trim());
+                    
+                    parsedData = values.map(v => {
+                        const num = v.includes('0x') ? parseInt(v, 16) : parseInt(v);
+                        if (isNaN(num)) {
+                            throw new Error(`无效的数值: ${v}`);
+                        }
+                        return num;
+                    });
+                }
+                
+                validateDataRange(parsedData, inputFormat);
+                currentData = parsedData;
+                
+                if (showMessage) {
+                    validation.innerHTML = `<div class="success">✅ 成功解析 ${parsedData.length} 个数据项</div>`;
+                }
+                
+                return true;
+                
+            } catch (error) {
+                if (showMessage) {
+                    validation.innerHTML = `<div class="error">❌ ${error.message}</div>`;
+                }
+                currentData = [];
+                return false;
+            }
+        }
+        
+        // 验证数据范围
+        function validateDataRange(data, format) {
+            const ranges = {
+                'byte': [0, 255],
+                'sbyte': [-128, 127],
+                'ushort': [0, 65535],
+                'short': [-32768, 32767],
+                'int': [-2147483648, 2147483647],
+                'uint': [0, 4294967295],
+                'hex': [0, 4294967295]
+            };
+            
+            if (ranges[format]) {
+                const [min, max] = ranges[format];
+                for (let value of data) {
+                    if (value < min || value > max) {
+                        throw new Error(`数值 ${value} 超出 ${format} 类型范围 [${min}, ${max}]`);
+                    }
+                }
+            }
+        }
+        
+        // 转换数据（增强版）
+        function convertData(isSmartMode = false) {
+            if (currentData.length === 0) {
+                alert('请先输入并解析数据');
+                return;
+            }
+            
+            const targetType = document.getElementById('targetType').value;
+            const byteOrder = document.getElementById('byteOrder').value;
+            const encoding = document.getElementById('encoding').value;
+            
+            document.getElementById('resultsSection').style.display = 'block';
+            
+            // 生成所有结果
+            allResults = generateAllResults();
+            
+            // 计算统计信息
+            const statistics = calculateStatistics();
+            displayStatistics(statistics);
+            
+            // 自动滚动到结果区域并切换标签
+            setTimeout(() => {
+                const resultsSection = document.getElementById('resultsSection');
+                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                // 切换到相应的标签
+                if (!isSmartMode) {
+                    switchTabProgrammatically('all-results');
+                } else {
+                    switchTabProgrammatically('smart-results');
+                }
+            }, 100);
+            
+            // 显示结果
+            if (isSmartMode) {
+                displaySmartResults();
+            } else {
+                displayResults(allResults, targetType, byteOrder, encoding);
+            }
+            
+            displayRawData();
+        }
+        
+        // 更新结果计数器
+        function updateResultCounter(results = null) {
+            const counter = document.getElementById('allResultsCounter');
+            
+            if (results === null) {
+                // 如果没有传入结果，隐藏计数器
+                counter.style.display = 'none';
+                return;
+            }
+            
+            const validResults = results.filter(r => r.isValid).length;
+            counter.textContent = validResults;
+            counter.style.display = validResults > 0 ? 'flex' : 'none';
+        }
+        
+        // 生成所有转换结果（增强版）
+        function generateAllResults() {
+            const results = [];
+            const byteOrders = ['ABCD', 'DCBA', 'CDAB', 'BADC'];
+            const encodings = ['DEC', 'BCD', 'HEX'];
+            const dataTypes = ['bool', 'byte', 'sbyte', 'short', 'ushort', 'int', 'uint', 'long', 'ulong', 'float', 'double', 'ascii'];
+            
+            const bytes = convertToBytes(currentData, currentInputFormat);
+            
+            for (let byteOrder of byteOrders) {
+                for (let encoding of encodings) {
+                    for (let dataType of dataTypes) {
+                        try {
+                            const result = convertWithParams(bytes, dataType, byteOrder, encoding);
+                            if (result.success) {
+                                // 计算智能评分
+                                const smartScore = calculateSmartScore(result, dataType, byteOrder, encoding);
+                                
+                                results.push({
+                                    inputFormat: currentInputFormat,
+                                    dataType,
+                                    byteOrder,
+                                    encoding,
+                                    result: result.data,
+                                    displayValue: result.displayValue,
+                                    isValid: result.isValid,
+                                    smartScore: smartScore,
+                                    isRecommended: smartScore > 70,
+                                    originalBytes: bytes
+                                });
+                            }
+                        } catch (error) {
+                            // 记录失败的转换
+                            results.push({
+                                inputFormat: currentInputFormat,
+                                dataType,
+                                byteOrder,
+                                encoding,
+                                result: null,
+                                displayValue: '转换失败',
+                                isValid: false,
+                                smartScore: 0,
+                                isRecommended: false,
+                                error: error.message,
+                                originalBytes: bytes
+                            });
+                        }
+                    }
+                }
+            }
+            
+            return results;
+        }
+        
+        // 计算智能评分
+        function calculateSmartScore(result, dataType, byteOrder, encoding) {
+            let score = 0;
+            
+            // 基础有效性评分
+            if (result.isValid) {
+                score += 30;
+            }
+            
+            // 根据智能分析结果加分
+            if (smartAnalysisResults.encoding && smartAnalysisResults.encoding[encoding]) {
+                const encodingAnalysis = smartAnalysisResults.encoding[encoding];
+                if (encodingAnalysis.confidence === 'high') {
+                    score += 25;
+                } else if (encodingAnalysis.confidence === 'medium') {
+                    score += 15;
+                }
+            }
+            
+            if (smartAnalysisResults.byteOrder && smartAnalysisResults.byteOrder[byteOrder]) {
+                const byteOrderAnalysis = smartAnalysisResults.byteOrder[byteOrder];
+                if (byteOrderAnalysis.confidence === 'high') {
+                    score += 25;
+                } else if (byteOrderAnalysis.confidence === 'medium') {
+                    score += 15;
+                }
+            }
+            
+            // 数据类型特定评分
+            if (dataType === 'float' || dataType === 'double') {
+                if (result.data && result.data.length > 0) {
+                    const validNumbers = result.data.filter(v => isFinite(v) && !isNaN(v) && Math.abs(v) > 0.0001 && Math.abs(v) < 1000000).length;
+                    score += (validNumbers / result.data.length) * 20;
+                }
+            }
+            
+            return Math.min(100, score);
+        }
+        
+        // 计算统计信息
+        function calculateStatistics() {
+            const stats = {
+                total: allResults.length,
+                successful: 0,
+                failed: 0,
+                recommended: 0,
+                byEncoding: {},
+                byByteOrder: {},
+                byDataType: {}
+            };
+            
+            for (let result of allResults) {
+                if (result.isValid) {
+                    stats.successful++;
+                } else {
+                    stats.failed++;
+                }
+                
+                if (result.isRecommended) {
+                    stats.recommended++;
+                }
+                
+                // 按分类统计
+                stats.byEncoding[result.encoding] = (stats.byEncoding[result.encoding] || 0) + 1;
+                stats.byByteOrder[result.byteOrder] = (stats.byByteOrder[result.byteOrder] || 0) + 1;
+                stats.byDataType[result.dataType] = (stats.byDataType[result.dataType] || 0) + 1;
+            }
+            
+            return stats;
+        }
+        
+        // 显示统计信息
+        function displayStatistics(stats) {
+            const panel = document.getElementById('statisticsPanel');
+            const grid = document.getElementById('statisticsGrid');
+            
+            const successRate = ((stats.successful / stats.total) * 100).toFixed(1);
+            const recommendRate = ((stats.recommended / stats.total) * 100).toFixed(1);
+            
+            grid.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-value">${stats.total}</div>
+                    <div class="stat-label">总转换数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${stats.successful}</div>
+                    <div class="stat-label">成功转换</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${stats.failed}</div>
+                    <div class="stat-label">转换失败</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${stats.recommended}</div>
+                    <div class="stat-label">智能推荐</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${successRate}%</div>
+                    <div class="stat-label">成功率</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${recommendRate}%</div>
+                    <div class="stat-label">推荐率</div>
+                </div>
+            `;
+            
+            panel.style.display = 'block';
+        }
+        
+        // 显示智能推荐结果
+        function displaySmartResults() {
+            const grid = document.getElementById('smartResultsGrid');
+            
+            // 按智能评分排序
+            const sortedResults = [...allResults].sort((a, b) => b.smartScore - a.smartScore);
+            
+            // 只显示评分较高的结果
+            const topResults = sortedResults.filter(r => r.smartScore > 30).slice(0, 20);
+            
+            grid.innerHTML = '';
+            for (let result of topResults) {
+                const element = createResultElement(result, true);
+                grid.appendChild(element);
+            }
+            
+            if (topResults.length === 0) {
+                grid.innerHTML = '<div class="result-item">没有找到高置信度的转换结果</div>';
+            }
+        }
+        
+        // 创建结果元素（增强版）
+        function createResultElement(result, showSmartInfo = false) {
+            const div = document.createElement('div');
+            div.className = 'result-item';
+            
+            if (result.isRecommended) {
+                div.classList.add('recommended');
+            }
+            
+            if (!result.isValid) {
+                div.classList.add('failed');
+            }
+            
+            let smartInfo = '';
+            if (showSmartInfo && result.smartScore !== undefined) {
+                const scoreClass = result.smartScore > 70 ? 'success' : result.smartScore > 40 ? 'warning' : 'error';
+                smartInfo = `
+                    <div class="success-indicator ${scoreClass}" title="智能评分: ${result.smartScore}"></div>
+                `;
+            }
+            
+            let statusIcon = '✅';
+            if (!result.isValid) {
+                statusIcon = '❌';
+            } else if (result.isRecommended) {
+                statusIcon = '⭐';
+            }
+            
+            const resultIndex = allResults.indexOf(result);
+            
+            div.innerHTML = `
+                ${smartInfo}
+                <div class="result-header">
+                    <span class="result-header-sub">${statusIcon} ${result.inputFormat.toUpperCase()} → ${result.dataType.toUpperCase()} - ${result.byteOrder} - ${result.encoding}</span>
+                    <div>
+                        <button class="copy-btn" data-copy-value="${result.displayValue.replace(/"/g, '&quot;')}" onclick="copyResultFromButton(this)" title="复制结果">📋</button>
+                        <button class="details-btn" onclick="showConversionDetails(${resultIndex})" title="查看详情">🔍</button>
+                        ${showSmartInfo ? `<span style="font-size: 12px; color: #6c757d;">${result.smartScore}分</span>` : ''}
+                    </div>
+                </div>
+                <div class="result-value">${result.displayValue}</div>
+            `;
+            
+            return div;
+        }
+        
+        // 从按钮复制结果的新方法
+        function copyResultFromButton(button) {
+            const value = button.getAttribute('data-copy-value').replace(/&quot;/g, '"');
+            copyResult(value);
+        }
+        
+        // 显示转换详情（增强版，包含禁用body滚动）
+        function showConversionDetails(resultIndex) {
+            const result = allResults[resultIndex];
+            if (!result) return;
+            
+            const modal = document.getElementById('detailsModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.textContent = `${result.inputFormat.toUpperCase()} → ${result.dataType.toUpperCase()} 转换详情`;
+            
+            // 生成详细内容
+            const detailsHtml = generateConversionDetails(result);
+            modalBody.innerHTML = detailsHtml;
+            
+            // 禁用body滚动
+            document.body.classList.add('modal-open');
+            
+            modal.style.display = 'block';
+        }
+        
+        // 生成转换详情内容
+        function generateConversionDetails(result) {
+            const bytes = result.originalBytes;
+            const byteOrders = ['ABCD', 'DCBA', 'CDAB', 'BADC'];
+            
+            let html = `
+                <div class="detail-section">
+                    <div class="detail-title">📤 转换结果</div>
+                    <div class="byteorder-test">
+                        <strong>当前配置：</strong>
+                        <div class="byteorder-item">
+                            <span class="byteorder-label">数据类型</span>
+                            <span class="byteorder-value">${result.dataType.toUpperCase()}</span>
+                            <span class="byteorder-status">${result.isValid ? '✅' : '❌'}</span>
+                        </div>
+                        <div class="byteorder-item">
+                            <span class="byteorder-label">字节序</span>
+                            <span class="byteorder-value">${result.byteOrder}</span>
+                            <span class="byteorder-status">🔄</span>
+                        </div>
+                        <div class="byteorder-item">
+                            <span class="byteorder-label">编码格式</span>
+                            <span class="byteorder-value">${result.encoding}</span>
+                            <span class="byteorder-status">🎯</span>
+                        </div>
+                        <div class="byteorder-item">
+                            <span class="byteorder-label">转换结果</span>
+                            <span class="byteorder-value" style="max-width: 300px; word-break: break-all;">${result.displayValue}</span>
+                            <span class="byteorder-status">${result.isValid ? '✅' : '❌'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 显示所有字节序测试结果
+            if (result.dataType !== 'ascii' && result.dataType !== 'bool' && result.dataType !== 'byte') {
+                html += `
+                    <div class="detail-section">
+                        <div class="detail-title">🧪 所有字节序格式测试结果</div>
+                        <div class="byteorder-test">
+                `;
+                
+                for (let byteOrder of byteOrders) {
+                    try {
+                        const testResult = convertWithParams(bytes, result.dataType, byteOrder, result.encoding);
+                        const isSuccess = testResult.success && testResult.isValid;
+                        const displayValue = testResult.success ? testResult.displayValue : '转换失败';
+                        
+                        html += `
+                            <div class="byteorder-item">
+                                <span class="byteorder-label">${byteOrder}格式</span>
+                                <span class="byteorder-value">[${displayValue}]</span>
+                                <span class="byteorder-status">${isSuccess ? '✅' : '❌'}</span>
+                            </div>
+                        `;
+                    } catch (error) {
+                        html += `
+                            <div class="byteorder-item">
+                                <span class="byteorder-label">${byteOrder}格式</span>
+                                <span class="byteorder-value">转换失败</span>
+                                <span class="byteorder-status">❌</span>
+                            </div>
+                        `;
+                    }
+                }
+                
+                html += '</div></div>';
+            }
+            
+            // 转换原理说明
+            html += `
+                <div class="detail-section">
+                    <div class="detail-title">📚 转换原理说明</div>
+                    <div class="principle-box">
+                        <div class="principle-item">
+                            <strong>问题分析：</strong>
+                            <span>你输入了${currentData.length}个${currentInputFormat}值：[${currentData.slice(0, 10).join(', ')}${currentData.length > 10 ? '...' : ''}]，转换为${result.dataType}类型。</span>
+                        </div>
+            `;
+            
+            // 具体的转换分析
+            if (currentInputFormat === 'ushort' && result.dataType === 'int') {
+                html += `
+                        <div class="principle-item">
+                            <strong>数据分析：</strong>
+                            <span>每2个16位ushort值被组合成1个32位int值，这可能是因为原始数据是32位整数被拆分读取造成的。</span>
+                        </div>
+                `;
+            } else if (currentInputFormat === 'int' && result.dataType === 'ushort') {
+                html += `
+                        <div class="principle-item">
+                            <strong>数据分析：</strong>
+                            <span>每个32位int被拆分成2个16位ushort读取，如果读取结果不符合预期，可能存在字节序转换问题。</span>
+                        </div>
+                `;
+            }
+            
+            // 字节序说明
+            html += `
+                        <div class="principle-item">
+                            <strong>字节序说明：</strong>
+                            <div style="margin-top: 8px;">
+                                <div>• <strong>ABCD (大端序)：</strong> 高字节在前，低字节在后，如 0x12345678 存储为 [12][34][56][78]</div>
+                                <div>• <strong>DCBA (小端序)：</strong> 低字节在前，高字节在后，如 0x12345678 存储为 [78][56][34][12]</div>
+                                <div>• <strong>CDAB (中端序)：</strong> 字对交换的大端序，西门子PLC常见</div>
+                                <div>• <strong>BADC (中端序)：</strong> 字对交换的小端序，欧姆龙PLC常见</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 内存布局展示
+            if (bytes.length > 0) {
+                html += `
+                    <div class="detail-section">
+                        <div class="detail-title">💾 内存布局分析</div>
+                        <div class="memory-layout">
+                            <div class="memory-step">原始数据: [${currentData.slice(0, 5).join(', ')}${currentData.length > 5 ? '...' : ''}]</div>
+                            <div class="memory-step">字节表示: [${bytes.slice(0, 20).map(b => '0x' + b.toString(16).padStart(2, '0')).join(', ')}${bytes.length > 20 ? '...' : ''}]</div>
+                `;
+                
+                if (result.dataType === 'float' && bytes.length >= 4) {
+                    const firstFourBytes = bytes.slice(0, 4);
+                    html += `
+                            <div class="memory-step">
+                                浮点数转换示例 (前4字节):
+                                <div style="margin-top: 5px;">
+                                    DCBA顺序: <span class="memory-bytes">[${firstFourBytes.map(b => '0x' + b.toString(16).padStart(2, '0')).join('][')}]}</span> → ${getFloatFromBytes(firstFourBytes, 'DCBA')}
+                                </div>
+                                <div>
+                                    ABCD顺序: <span class="memory-bytes">[${firstFourBytes.slice().reverse().map(b => '0x' + b.toString(16).padStart(2, '0')).join('][')}]}</span> → ${getFloatFromBytes(firstFourBytes, 'ABCD')}
+                                </div>
+                            </div>
+                    `;
+                }
+                
+                html += '</div></div>';
+            }
+            
+            return html;
+        }
+        
+        // 从字节数组获取浮点数（用于演示）
+        function getFloatFromBytes(bytes, byteOrder) {
+            try {
+                const orderedBytes = applyByteOrder([...bytes], byteOrder, 4);
+                const buffer = new ArrayBuffer(4);
+                const view = new DataView(buffer);
+                for (let i = 0; i < 4; i++) {
+                    view.setUint8(i, orderedBytes[i]);
+                }
+                const value = view.getFloat32(0, true);
+                return isFinite(value) ? value.toFixed(6) : value.toString();
+            } catch (error) {
+                return '转换失败';
+            }
+        }
+        
+        // 关闭详情模态框（增强版，恢复body滚动）
+        function closeDetailsModal() {
+            document.getElementById('detailsModal').style.display = 'none';
+            // 恢复body滚动
+            document.body.classList.remove('modal-open');
+        }
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('detailsModal');
+            if (event.target === modal) {
+                closeDetailsModal();
+            }
+        }
+        
+        // ESC键关闭模态框
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('detailsModal');
+                if (modal.style.display === 'block') {
+                    closeDetailsModal();
+                }
+            }
+        });
+        
+        // 显示结果
+        function displayResults(results, targetTypeFilter, byteOrderFilter, encodingFilter) {
+            const allResultsGrid = document.getElementById('allResultsGrid');
+            allResultsGrid.innerHTML = '';
+            
+            let filteredResults = results;
+            if (targetTypeFilter !== 'all') {
+                filteredResults = filteredResults.filter(r => r.dataType === targetTypeFilter);
+            }
+            if (byteOrderFilter !== 'all') {
+                filteredResults = filteredResults.filter(r => r.byteOrder === byteOrderFilter);
+            }
+            if (encodingFilter !== 'all') {
+                filteredResults = filteredResults.filter(r => r.encoding === encodingFilter);
+            }
+            
+            // 更新筛选后的计数器
+            updateResultCounter(filteredResults);
+            
+            for (let result of filteredResults) {
+                const element = createResultElement(result);
+                allResultsGrid.appendChild(element);
+            }
+        }
+        
+        // 筛选结果
+        function filterResults() {
+            if (allResults.length === 0) return;
+            
+            const targetType = document.getElementById('targetType').value;
+            const byteOrder = document.getElementById('byteOrder').value;
+            const encoding = document.getElementById('encoding').value;
+            
+            displayResults(allResults, targetType, byteOrder, encoding);
+        }
+        
+        // 原有的辅助函数保持不变
+        function convertToBytes(data, inputFormat) {
+            const bytes = [];
+            
+            for (let value of data) {
+                switch (inputFormat) {
+                    case 'byte':
+                        bytes.push(value);
+                        break;
+                    case 'ushort':
+                    case 'short':
+                        bytes.push(value & 0xFF);
+                        bytes.push((value >> 8) & 0xFF);
+                        break;
+                    case 'int':
+                    case 'uint':
+                    case 'hex':
+                        bytes.push(value & 0xFF);
+                        bytes.push((value >> 8) & 0xFF);
+                        bytes.push((value >> 16) & 0xFF);
+                        bytes.push((value >> 24) & 0xFF);
+                        break;
+                }
+            }
+            
+            return bytes;
+        }
+        
+        function convertWithParams(bytes, dataType, byteOrder, encoding) {
+            try {
+                const processedBytes = applyEncoding(bytes, encoding);
+                if (!processedBytes.success) {
+                    return { success: false };
+                }
+                
+                const result = convertByDataType(processedBytes.data, dataType, byteOrder);
+                return result;
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+        
+        function applyEncoding(bytes, encoding) {
+            switch (encoding) {
+                case 'DEC':
+                    return { success: true, data: bytes };
+                    
+                case 'BCD':
+                    for (let byte of bytes) {
+                        const high = (byte >> 4) & 0xF;
+                        const low = byte & 0xF;
+                        if (high > 9 || low > 9) {
+                            return { success: false, error: 'Invalid BCD format' };
+                        }
+                    }
+                    
+                    const bcdBytes = bytes.map(byte => {
+                        const high = (byte >> 4) & 0xF;
+                        const low = byte & 0xF;
+                        return high * 10 + low;
+                    });
+                    return { success: true, data: bcdBytes };
+                    
+                case 'HEX':
+                    return { success: true, data: bytes };
+                    
+                default:
+                    return { success: true, data: bytes };
+            }
+        }
+        
+        function convertByDataType(bytes, dataType, byteOrder) {
+            const result = [];
+            
+            try {
+                switch (dataType) {
+                    case 'bool':
+                        for (let byte of bytes) {
+                            for (let i = 0; i < 8; i++) {
+                                result.push((byte & (1 << i)) !== 0);
+                            }
+                        }
+                        break;
+                        
+                    case 'byte':
+                        result.push(...bytes);
+                        break;
+                        
+                    case 'sbyte':
+                        for (let byte of bytes) {
+                            result.push(byte > 127 ? byte - 256 : byte);
+                        }
+                        break;
+                        
+                    case 'short':
+                    case 'ushort':
+                        for (let i = 0; i < bytes.length - 1; i += 2) {
+                            const orderedBytes = applyByteOrder([bytes[i], bytes[i + 1]], byteOrder, 2);
+                            const value = orderedBytes[0] | (orderedBytes[1] << 8);
+                            result.push(dataType === 'short' && value > 32767 ? value - 65536 : value);
+                        }
+                        break;
+                        
+                    case 'int':
+                    case 'uint':
+                        for (let i = 0; i < bytes.length - 3; i += 4) {
+                            const orderedBytes = applyByteOrder([bytes[i], bytes[i + 1], bytes[i + 2], bytes[i + 3]], byteOrder, 4);
+                            const value = orderedBytes[0] | (orderedBytes[1] << 8) | (orderedBytes[2] << 16) | (orderedBytes[3] << 24);
+                            result.push(dataType === 'int' && value > 2147483647 ? value - 4294967296 : value >>> 0);
+                        }
+                        break;
+                        
+                    case 'long':
+                    case 'ulong':
+                        for (let i = 0; i < bytes.length - 7; i += 8) {
+                            const orderedBytes = applyByteOrder(bytes.slice(i, i + 8), byteOrder, 8);
+                            let value = BigInt(0);
+                            for (let j = 0; j < 8; j++) {
+                                value |= BigInt(orderedBytes[j]) << BigInt(j * 8);
+                            }
+                            result.push(Number(value));
+                        }
+                        break;
+                        
+                    case 'float':
+                        for (let i = 0; i < bytes.length - 3; i += 4) {
+                            const orderedBytes = applyByteOrder([bytes[i], bytes[i + 1], bytes[i + 2], bytes[i + 3]], byteOrder, 4);
+                            const buffer = new ArrayBuffer(4);
+                            const view = new DataView(buffer);
+                            for (let j = 0; j < 4; j++) {
+                                view.setUint8(j, orderedBytes[j]);
+                            }
+                            const floatValue = view.getFloat32(0, true);
+                            result.push(floatValue);
+                        }
+                        break;
+                        
+                    case 'double':
+                        for (let i = 0; i < bytes.length - 7; i += 8) {
+                            const orderedBytes = applyByteOrder(bytes.slice(i, i + 8), byteOrder, 8);
+                            const buffer = new ArrayBuffer(8);
+                            const view = new DataView(buffer);
+                            for (let j = 0; j < 8; j++) {
+                                view.setUint8(j, orderedBytes[j]);
+                            }
+                            const doubleValue = view.getFloat64(0, true);
+                            result.push(doubleValue);
+                        }
+                        break;
+                        
+                    case 'ascii':
+                        const asciiString = bytes.map(byte => 
+                            byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : '·'
+                        ).join('');
+                        result.push(asciiString);
+                        break;
+                }
+                
+                const displayValue = formatDisplayValue(result, dataType);
+                const isValid = validateResult(result, dataType);
+                
+                return {
+                    success: true,
+                    data: result,
+                    displayValue: displayValue,
+                    isValid: isValid
+                };
+                
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+        
+        function applyByteOrder(bytes, byteOrder, expectedLength) {
+            const paddedBytes = [...bytes];
+            while (paddedBytes.length < expectedLength) {
+                paddedBytes.push(0);
+            }
+            
+            switch (byteOrder) {
+                case 'ABCD':
+                    return paddedBytes.reverse();
+                case 'DCBA':
+                    return paddedBytes;
+                case 'CDAB':
+                    if (expectedLength === 4) {
+                        return [paddedBytes[2], paddedBytes[3], paddedBytes[0], paddedBytes[1]];
+                    } else if (expectedLength === 2) {
+                        return [paddedBytes[1], paddedBytes[0]];
+                    } else if (expectedLength === 8) {
+                        return [paddedBytes[6], paddedBytes[7], paddedBytes[4], paddedBytes[5], paddedBytes[2], paddedBytes[3], paddedBytes[0], paddedBytes[1]];
+                    }
+                    return paddedBytes;
+                case 'BADC':
+                    if (expectedLength === 4) {
+                        return [paddedBytes[1], paddedBytes[0], paddedBytes[3], paddedBytes[2]];
+                    } else if (expectedLength === 2) {
+                        return [paddedBytes[1], paddedBytes[0]];
+                    } else if (expectedLength === 8) {
+                        return [paddedBytes[1], paddedBytes[0], paddedBytes[3], paddedBytes[2], paddedBytes[5], paddedBytes[4], paddedBytes[7], paddedBytes[6]];
+                    }
+                    return paddedBytes;
+                default:
+                    return paddedBytes;
+            }
+        }
+        
+        function formatDisplayValue(result, dataType) {
+            if (result.length === 0) return '';
+            
+            switch (dataType) {
+                case 'float':
+                case 'double':
+                    return result.map(v => {
+                        if (isNaN(v) || !isFinite(v)) {
+                            return v.toString();
+                        }
+                        return parseFloat(v.toFixed(6));
+                    }).join(', ');
+                case 'bool':
+                    return result.slice(0, 32).map(v => v ? '1' : '0').join('');
+                case 'ascii':
+                    return result[0];
+                default:
+                    return result.join(', ');
+            }
+        }
+        
+        function validateResult(result, dataType) {
+            if (result.length === 0) return false;
+            
+            switch (dataType) {
+                case 'float':
+                case 'double':
+                    return result.some(v => isFinite(v) && !isNaN(v) && Math.abs(v) < 1e10);
+                case 'ascii':
+                    return /[a-zA-Z0-9]/.test(result[0]);
+                default:
+                    return true;
+            }
+        }
+        
+        function displayRawData() {
+            const rawDataDisplay = document.getElementById('rawDataDisplay');
+            const bytes = convertToBytes(currentData, currentInputFormat);
+            
+            rawDataDisplay.innerHTML = `
+                <div class="process-step">
+                    <div class="step-title">📥 输入数据 (${currentInputFormat})</div>
+                    <div class="step-content">[${currentData.join(', ')}]</div>
+                </div>
+                <div class="process-step">
+                    <div class="step-title">🔢 转换为字节数组</div>
+                    <div class="step-content">[${bytes.join(', ')}]</div>
+                </div>
+                <div class="process-step">
+                    <div class="step-title">🔤 十六进制表示</div>
+                    <div class="step-content">[${bytes.map(b => '0x' + b.toString(16).padStart(2, '0').toUpperCase()).join(', ')}]</div>
+                </div>
+                <div class="process-step">
+                    <div class="step-title">💾 二进制表示</div>
+                    <div class="step-content">[${bytes.map(b => '0b' + b.toString(2).padStart(8, '0')).join(', ')}]</div>
+                </div>
+            `;
+        }
+        
+        function copyResult(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                console.log('已复制到剪贴板');
+            });
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        // 程序化切换标签（不依赖event对象）
+        function switchTabProgrammatically(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // 根据标签名找到对应的按钮并激活
+            const tabMapping = {
+                'smart-results': 0,
+                'all-results': 1,
+                'raw-data': 2
+            };
+            
+            const buttons = document.querySelectorAll('.tab-btn');
+            const targetIndex = tabMapping[tabName];
+            if (targetIndex !== undefined && buttons[targetIndex]) {
+                buttons[targetIndex].classList.add('active');
+            }
+            
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        // 清空之前的结果
+        function clearPreviousResults() {
+            allResults = [];
+            document.getElementById('allResultsGrid').innerHTML = '';
+            document.getElementById('smartResultsGrid').innerHTML = '';
+            document.getElementById('rawDataDisplay').innerHTML = '';
+            document.getElementById('statisticsPanel').style.display = 'none';
+            updateResultCounter(null); // 隐藏计数器
+        }
+        
+        function clearInput() {
+            document.getElementById('rawData').value = '';
+            document.getElementById('inputValidation').innerHTML = '';
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('smartDetection').style.display = 'none';
+            document.getElementById('recommendationPanel').style.display = 'none';
+            document.getElementById('autoSelectNotice').style.display = 'none';
+            
+            // 清空所有相关数据和结果
+            currentData = [];
+            smartAnalysisResults = {};
+            recommendedConfigs = [];
+            clearPreviousResults();
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('rawData').value = '[13312,0,16128,0,13312,0,8704,0,5888,0]';
+        });
+    </script>
+</body>
+</html>

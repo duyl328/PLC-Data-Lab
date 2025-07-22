@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLC数据格式转换与调试工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .input-section, .control-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 1px solid #e0e6ed;
+        }
+        
+        .section-title {
+            font-size: 1.4em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+        
+        .results-section {
+            grid-column: 1 / -1;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 1px solid #e0e6ed;
+            margin-top: 20px;
+        }
+        
+        .results-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #7f8c8d;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 筛选控件样式 */
+        .filter-controls {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        
+        .filter-group select {
+            padding: 8px;
+            font-size: 13px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        
+        .filter-stats {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 6px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .clear-filters-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s ease;
+        }
+        
+        .clear-filters-btn:hover {
+            background: #d32f2f;
+        }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .result-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .result-item:hover {
+            background: #e3f2fd;
+            border-color: #3498db;
+            transform: translateY(-2px);
+        }
+        
+        .result-item.filtered-out {
+            display: none;
+        }
+        
+        .result-header {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .result-value {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: white;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            word-break: break-all;
+            font-size: 13px;
+        }
+        
+        .copy-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .copy-btn:hover {
+            background: #138496;
+        }
+        
+        .error {
+            color: #e74c3c;
+            background: #fadbd8;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            color: #27ae60;
+            background: #d5f4e6;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        
+        .process-step {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .step-content {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .brand-info {
+            background: #e8f4fd;
+            border: 1px solid #3498db;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .brand-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .brand-item {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #bdc3c7;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .container {
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 PLC数据格式转换与调试工具</h1>
+            <p>专业的工业数据格式转换、字节序分析与调试平台</p>
+        </div>
+        
+        <div class="main-content">
+            <!-- 数据输入区 -->
+            <div class="input-section">
+                <div class="section-title">
+                    📥 数据输入区
+                </div>
+                
+                <div class="form-group">
+                    <label>输入格式选择：</label>
+                    <select id="inputFormat">
+                        <option value="byte">byte[] (0-255)</option>
+                        <option value="ushort" selected>ushort[] (0-65535)</option>
+                        <option value="short">short[] (-32768 to 32767)</option>
+                        <option value="int">int[] (-2147483648 to 2147483647)</option>
+                        <option value="uint">uint[] (0 to 4294967295)</option>
+                        <option value="hex">Hex 字符串</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>原始数据输入：</label>
+                    <textarea id="rawData" placeholder="示例：[13312,0,16128,0,13312,0,8704,0,5888,0]&#10;或者：0x3400,0x0000,0x3F00,0x0000&#10;支持逗号、空格、换行分隔"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn" onclick="parseInput()">📊 解析数据</button>
+                    <button class="btn btn-secondary" onclick="clearInput()">🗑️ 清空</button>
+                </div>
+                
+                <div id="inputValidation"></div>
+            </div>
+            
+            <!-- 控制选项区 -->
+            <div class="control-section">
+                <div class="section-title">
+                    ⚙️ 转换控制
+                </div>
+                
+                <div class="form-group">
+                    <label>目标数据类型：</label>
+                    <select id="targetType">
+                        <option value="all">🔄 显示所有类型</option>
+                        <option value="bool">bool (布尔)</option>
+                        <option value="byte">byte (无符号8位)</option>
+                        <option value="sbyte">sbyte (有符号8位)</option>
+                        <option value="short">short (有符号16位)</option>
+                        <option value="ushort">ushort (无符号16位)</option>
+                        <option value="int">int (有符号32位)</option>
+                        <option value="uint">uint (无符号32位)</option>
+                        <option value="long">long (有符号64位)</option>
+                        <option value="ulong">ulong (无符号64位)</option>
+                        <option value="float">float (32位浮点)</option>
+                        <option value="double">double (64位浮点)</option>
+                        <option value="ascii">ASCII 字符串</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>字节序选择：</label>
+                    <select id="byteOrder">
+                        <option value="all">🔄 显示所有字节序</option>
+                        <option value="ABCD">ABCD (大端序)</option>
+                        <option value="DCBA">DCBA (小端序)</option>
+                        <option value="CDAB">CDAB (西门子常见)</option>
+                        <option value="BADC">BADC (欧姆龙常见)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>编码格式：</label>
+                    <select id="encoding">
+                        <option value="all">🔄 显示所有编码</option>
+                        <option value="DEC">DEC (十进制编码)</option>
+                        <option value="BCD">BCD (二进制编码十进制)</option>
+                        <option value="HEX">HEX (十六进制编码)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn btn-success" onclick="convertData()">🚀 开始转换</button>
+                    <button class="btn" onclick="showBrandInfo()">📚 设备参考</button>
+                </div>
+                
+                <!-- 设备品牌参考信息 -->
+                <div class="brand-info" style="display: none;" id="brandInfo">
+                    <h4>🏭 常见PLC品牌字节序参考</h4>
+                    <div class="brand-list">
+                        <div class="brand-item">
+                            <strong>西门子 (Siemens)</strong><br>
+                            常用: CDAB
+                        </div>
+                        <div class="brand-item">
+                            <strong>欧姆龙 (Omron)</strong><br>
+                            常用: BADC
+                        </div>
+                        <div class="brand-item">
+                            <strong>三菱 (Mitsubishi)</strong><br>
+                            常用: ABCD
+                        </div>
+                        <div class="brand-item">
+                            <strong>施耐德 (Schneider)</strong><br>
+                            常用: DCBA
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 结果展示区 -->
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <div class="section-title">
+                📊 转换结果
+            </div>
+            
+            <div class="results-tabs">
+                <button class="tab-btn active" onclick="switchTab('all-results')">全部结果</button>
+                <button class="tab-btn" onclick="switchTab('filtered-results')">筛选结果</button>
+                <button class="tab-btn" onclick="switchTab('raw-data')">原始数据</button>
+            </div>
+            
+            <div id="all-results" class="tab-content active">
+                <!-- 筛选控件 -->
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label>原始类型</label>
+                        <select id="filterInputFormat" onchange="applyFilters()">
+                            <option value="">全部</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>目标数据类型</label>
+                        <select id="filterDataType" onchange="applyFilters()">
+                            <option value="">全部</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>字节序</label>
+                        <select id="filterByteOrder" onchange="applyFilters()">
+                            <option value="">全部</option>
+                            <option value="ABCD">ABCD (大端序)</option>
+                            <option value="DCBA">DCBA (小端序)</option>
+                            <option value="CDAB">CDAB (西门子常见)</option>
+                            <option value="BADC">BADC (欧姆龙常见)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>编码格式</label>
+                        <select id="filterEncoding" onchange="applyFilters()">
+                            <option value="">全部</option>
+                            <option value="DEC">DEC (十进制)</option>
+                            <option value="BCD">BCD (二进制编码十进制)</option>
+                            <option value="HEX">HEX (十六进制)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <button class="clear-filters-btn" onclick="clearFilters()">清除筛选</button>
+                    </div>
+                </div>
+                
+                <!-- 筛选统计 -->
+                <div class="filter-stats" id="filterStats">
+                    <span>显示 <strong id="visibleCount">0</strong> 条结果，共 <strong id="totalCount">0</strong> 条</span>
+                </div>
+                
+                <div id="allResultsGrid" class="result-grid"></div>
+            </div>
+            
+            <div id="filtered-results" class="tab-content">
+                <div id="filteredResultsGrid" class="result-grid"></div>
+            </div>
+            
+            <div id="raw-data" class="tab-content">
+                <div id="rawDataDisplay"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 详细解释弹窗 -->
+    <div id="detailModal" class="detail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔍 转换过程详解</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = [];
+        let currentInputFormat = 'ushort';
+        let allResults = [];
+        
+        // 解析输入数据
+        function parseInput() {
+            const rawDataElement = document.getElementById('rawData');
+            const inputFormat = document.getElementById('inputFormat').value;
+            const validation = document.getElementById('inputValidation');
+            
+            try {
+                const inputText = rawDataElement.value.trim();
+                if (!inputText) {
+                    throw new Error('请输入数据');
+                }
+                
+                // 解析不同格式的输入
+                let parsedData = [];
+                currentInputFormat = inputFormat;
+                
+                if (inputFormat === 'hex') {
+                    // 十六进制输入
+                    const hexPattern = /0x[0-9A-Fa-f]+|[0-9A-Fa-f]+/g;
+                    const hexMatches = inputText.match(hexPattern);
+                    if (!hexMatches) {
+                        throw new Error('无效的十六进制格式');
+                    }
+                    parsedData = hexMatches.map(hex => {
+                        const value = parseInt(hex.replace('0x', ''), 16);
+                        return value;
+                    });
+                } else {
+                    // 数组格式输入 - 移除括号并分割
+                    const cleanText = inputText.replace(/[\[\]]/g, '');
+                    const values = cleanText.split(/[,\s\n]+/).filter(v => v.trim());
+                    
+                    parsedData = values.map(v => {
+                        const num = v.includes('0x') ? parseInt(v, 16) : parseInt(v);
+                        if (isNaN(num)) {
+                            throw new Error(`无效的数值: ${v}`);
+                        }
+                        return num;
+                    });
+                }
+                
+                // 验证数据范围
+                validateDataRange(parsedData, inputFormat);
+                
+                currentData = parsedData;
+                validation.innerHTML = `<div class="success">✅ 成功解析 ${parsedData.length} 个数据项</div>`;
+                
+                // 自动转换
+                convertData();
+                
+            } catch (error) {
+                validation.innerHTML = `<div class="error">❌ ${error.message}</div>`;
+                currentData = [];
+            }
+        }
+        
+        // 验证数据范围
+        function validateDataRange(data, format) {
+            const ranges = {
+                'byte': [0, 255],
+                'sbyte': [-128, 127],
+                'ushort': [0, 65535],
+                'short': [-32768, 32767],
+                'int': [-2147483648, 2147483647],
+                'uint': [0, 4294967295],
+                'hex': [0, 4294967295]
+            };
+            
+            if (ranges[format]) {
+                const [min, max] = ranges[format];
+                for (let value of data) {
+                    if (value < min || value > max) {
+                        throw new Error(`数值 ${value} 超出 ${format} 类型范围 [${min}, ${max}]`);
+                    }
+                }
+            }
+        }
+        
+        // 转换数据
+        function convertData() {
+            if (currentData.length === 0) {
+                alert('请先输入并解析数据');
+                return;
+            }
+            
+            const targetType = document.getElementById('targetType').value;
+            const byteOrder = document.getElementById('byteOrder').value;
+            const encoding = document.getElementById('encoding').value;
+            
+            // 显示结果区域
+            document.getElementById('resultsSection').style.display = 'block';
+            
+            // 生成所有结果
+            allResults = generateAllResults();
+            
+            // 更新筛选器选项
+            updateFilterOptions();
+            
+            // 显示结果
+            displayResults(allResults, targetType, byteOrder, encoding);
+            
+            // 显示原始数据
+            displayRawData();
+        }
+        
+        // 生成所有可能的转换结果
+        function generateAllResults() {
+            const results = [];
+            const byteOrders = ['ABCD', 'DCBA', 'CDAB', 'BADC'];
+            const encodings = ['DEC', 'BCD', 'HEX'];
+            const dataTypes = ['bool', 'byte', 'sbyte', 'short', 'ushort', 'int', 'uint', 'long', 'ulong', 'float', 'double', 'ascii'];
+            
+            // 首先将输入数据转换为字节数组
+            const bytes = convertToBytes(currentData, currentInputFormat);
+            
+            for (let byteOrder of byteOrders) {
+                for (let encoding of encodings) {
+                    for (let dataType of dataTypes) {
+                        try {
+                            const result = convertWithParams(bytes, dataType, byteOrder, encoding);
+                            if (result.success) {
+                                results.push({
+                                    inputFormat: currentInputFormat,
+                                    dataType,
+                                    byteOrder,
+                                    encoding,
+                                    result: result.data,
+                                    displayValue: result.displayValue,
+                                    isValid: result.isValid
+                                });
+                            }
+                        } catch (error) {
+                            // 忽略转换错误，继续下一个组合
+                        }
+                    }
+                }
+            }
+            
+            return results;
+        }
+        
+        // 更新筛选器选项
+        function updateFilterOptions() {
+            // 获取唯一值
+            const inputFormats = [...new Set(allResults.map(r => r.inputFormat))];
+            const dataTypes = [...new Set(allResults.map(r => r.dataType))];
+            
+            // 更新原始类型筛选器
+            const filterInputFormat = document.getElementById('filterInputFormat');
+            filterInputFormat.innerHTML = '<option value="">全部</option>';
+            inputFormats.forEach(format => {
+                const option = document.createElement('option');
+                option.value = format;
+                option.textContent = format.toUpperCase();
+                filterInputFormat.appendChild(option);
+            });
+            
+            // 更新目标数据类型筛选器
+            const filterDataType = document.getElementById('filterDataType');
+            filterDataType.innerHTML = '<option value="">全部</option>';
+            dataTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type.toUpperCase();
+                filterDataType.appendChild(option);
+            });
+        }
+        
+        // 应用筛选
+        function applyFilters() {
+            const filterInputFormat = document.getElementById('filterInputFormat').value;
+            const filterDataType = document.getElementById('filterDataType').value;
+            const filterByteOrder = document.getElementById('filterByteOrder').value;
+            const filterEncoding = document.getElementById('filterEncoding').value;
+            
+            const resultItems = document.querySelectorAll('#allResultsGrid .result-item');
+            let visibleCount = 0;
+            
+            resultItems.forEach((item, index) => {
+                const result = allResults[index];
+                if (!result) return;
+                
+                const matchesInputFormat = !filterInputFormat || result.inputFormat === filterInputFormat;
+                const matchesDataType = !filterDataType || result.dataType === filterDataType;
+                const matchesByteOrder = !filterByteOrder || result.byteOrder === filterByteOrder;
+                const matchesEncoding = !filterEncoding || result.encoding === filterEncoding;
+                
+                const shouldShow = matchesInputFormat && matchesDataType && matchesByteOrder && matchesEncoding;
+                
+                if (shouldShow) {
+                    item.classList.remove('filtered-out');
+                    visibleCount++;
+                } else {
+                    item.classList.add('filtered-out');
+                }
+            });
+            
+            // 更新统计信息
+            document.getElementById('visibleCount').textContent = visibleCount;
+            document.getElementById('totalCount').textContent = allResults.length;
+        }
+        
+        // 清除筛选
+        function clearFilters() {
+            document.getElementById('filterInputFormat').value = '';
+            document.getElementById('filterDataType').value = '';
+            document.getElementById('filterByteOrder').value = '';
+            document.getElementById('filterEncoding').value = '';
+            
+            // 显示所有结果
+            const resultItems = document.querySelectorAll('#allResultsGrid .result-item');
+            resultItems.forEach(item => {
+                item.classList.remove('filtered-out');
+            });
+            
+            // 更新统计信息
+            document.getElementById('visibleCount').textContent = allResults.length;
+            document.getElementById('totalCount').textContent = allResults.length;
+        }
+        
+        // 将输入数据转换为字节数组
+        function convertToBytes(data, inputFormat) {
+            const bytes = [];
+            
+            for (let value of data) {
+                switch (inputFormat) {
+                    case 'byte':
+                        bytes.push(value);
+                        break;
+                    case 'ushort':
+                    case 'short':
+                        // 16位数据转换为2个字节（小端序）
+                        bytes.push(value & 0xFF);
+                        bytes.push((value >> 8) & 0xFF);
+                        break;
+                    case 'int':
+                    case 'uint':
+                    case 'hex':
+                        // 32位数据转换为4个字节（小端序）
+                        bytes.push(value & 0xFF);
+                        bytes.push((value >> 8) & 0xFF);
+                        bytes.push((value >> 16) & 0xFF);
+                        bytes.push((value >> 24) & 0xFF);
+                        break;
+                }
+            }
+            
+            return bytes;
+        }
+        
+        // 使用指定参数进行转换
+        function convertWithParams(bytes, dataType, byteOrder, encoding) {
+            try {
+                // 首先根据编码格式处理字节
+                const processedBytes = applyEncoding(bytes, encoding);
+                if (!processedBytes.success) {
+                    return { success: false };
+                }
+                
+                // 然后根据数据类型和字节序进行转换
+                const result = convertByDataType(processedBytes.data, dataType, byteOrder);
+                return result;
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+        
+        // 应用编码格式
+        function applyEncoding(bytes, encoding) {
+            switch (encoding) {
+                case 'DEC':
+                    return { success: true, data: bytes };
+                    
+                case 'BCD':
+                    // 验证BCD格式（每个半字节都应该是0-9）
+                    for (let byte of bytes) {
+                        const high = (byte >> 4) & 0xF;
+                        const low = byte & 0xF;
+                        if (high > 9 || low > 9) {
+                            return { success: false, error: 'Invalid BCD format' };
+                        }
+                    }
+                    
+                    // BCD转换为十进制
+                    const bcdBytes = bytes.map(byte => {
+                        const high = (byte >> 4) & 0xF;
+                        const low = byte & 0xF;
+                        return high * 10 + low;
+                    });
+                    return { success: true, data: bcdBytes };
+                    
+                case 'HEX':
+                    return { success: true, data: bytes };
+                    
+                default:
+                    return { success: true, data: bytes };
+            }
+        }
+        
+        // 根据数据类型和字节序转换
+        function convertByDataType(bytes, dataType, byteOrder) {
+            const result = [];
+            
+            try {
+                switch (dataType) {
+                    case 'bool':
+                        for (let byte of bytes) {
+                            for (let i = 0; i < 8; i++) {
+                                result.push((byte & (1 << i)) !== 0);
+                            }
+                        }
+                        break;
+                        
+                    case 'byte':
+                        result.push(...bytes);
+                        break;
+                        
+                    case 'sbyte':
+                        for (let byte of bytes) {
+                            result.push(byte > 127 ? byte - 256 : byte);
+                        }
+                        break;
+                        
+                    case 'short':
+                    case 'ushort':
+                        for (let i = 0; i < bytes.length - 1; i += 2) {
+                            const orderedBytes = applyByteOrder([bytes[i], bytes[i + 1]], byteOrder, 2);
+                            const value = orderedBytes[0] | (orderedBytes[1] << 8);
+                            result.push(dataType === 'short' && value > 32767 ? value - 65536 : value);
+                        }
+                        break;
+                        
+                    case 'int':
+                    case 'uint':
+                        for (let i = 0; i < bytes.length - 3; i += 4) {
+                            const orderedBytes = applyByteOrder([bytes[i], bytes[i + 1], bytes[i + 2], bytes[i + 3]], byteOrder, 4);
+                            const value = orderedBytes[0] | (orderedBytes[1] << 8) | (orderedBytes[2] << 16) | (orderedBytes[3] << 24);
+                            result.push(dataType === 'int' && value > 2147483647 ? value - 4294967296 : value >>> 0);
+                        }
+                        break;
+                        
+                    case 'float':
+                        for (let i = 0; i < bytes.length - 3; i += 4) {
+                            const orderedBytes = applyByteOrder([bytes[i], bytes[i + 1], bytes[i + 2], bytes[i + 3]], byteOrder, 4);
+                            const buffer = new ArrayBuffer(4);
+                            const view = new DataView(buffer);
+                            for (let j = 0; j < 4; j++) {
+                                view.setUint8(j, orderedBytes[j]);
+                            }
+                            const floatValue = view.getFloat32(0, true);
+                            result.push(floatValue);
+                        }
+                        break;
+                        
+                    case 'double':
+                        for (let i = 0; i < bytes.length - 7; i += 8) {
+                            const orderedBytes = applyByteOrder(bytes.slice(i, i + 8), byteOrder, 8);
+                            const buffer = new ArrayBuffer(8);
+                            const view = new DataView(buffer);
+                            for (let j = 0; j < 8; j++) {
+                                view.setUint8(j, orderedBytes[j]);
+                            }
+                            const doubleValue = view.getFloat64(0, true);
+                            result.push(doubleValue);
+                        }
+                        break;
+                        
+                    case 'ascii':
+                        const asciiString = bytes.map(byte => 
+                            byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : '·'
+                        ).join('');
+                        result.push(asciiString);
+                        break;
+                }
+                
+                // 格式化显示值
+                const displayValue = formatDisplayValue(result, dataType);
+                const isValid = validateResult(result, dataType);
+                
+                return {
+                    success: true,
+                    data: result,
+                    displayValue: displayValue,
+                    isValid: isValid
+                };
+                
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+        
+        // 应用字节序
+        function applyByteOrder(bytes, byteOrder, expectedLength) {
+            // 确保字节数组长度正确
+            const paddedBytes = [...bytes];
+            while (paddedBytes.length < expectedLength) {
+                paddedBytes.push(0);
+            }
+            
+            switch (byteOrder) {
+                case 'ABCD': // 大端序
+                    return paddedBytes.reverse();
+                case 'DCBA': // 小端序
+                    return paddedBytes;
+                case 'CDAB': // 西门子常见
+                    if (expectedLength === 4) {
+                        return [paddedBytes[2], paddedBytes[3], paddedBytes[0], paddedBytes[1]];
+                    } else if (expectedLength === 2) {
+                        return [paddedBytes[1], paddedBytes[0]];
+                    }
+                    return paddedBytes;
+                case 'BADC': // 欧姆龙常见
+                    if (expectedLength === 4) {
+                        return [paddedBytes[1], paddedBytes[0], paddedBytes[3], paddedBytes[2]];
+                    } else if (expectedLength === 2) {
+                        return [paddedBytes[1], paddedBytes[0]];
+                    }
+                    return paddedBytes;
+                default:
+                    return paddedBytes;
+            }
+        }
+        
+        // 格式化显示值
+        function formatDisplayValue(result, dataType) {
+            if (result.length === 0) return '';
+            
+            switch (dataType) {
+                case 'float':
+                case 'double':
+                    return result.map(v => {
+                        if (isNaN(v) || !isFinite(v)) {
+                            return v.toString();
+                        }
+                        return parseFloat(v.toFixed(6));
+                    }).join(', ');
+                case 'bool':
+                    return result.slice(0, 32).map(v => v ? '1' : '0').join('');
+                case 'ascii':
+                    return result[0];
+                default:
+                    return result.join(', ');
+            }
+        }
+        
+        // 验证结果
+        function validateResult(result, dataType) {
+            if (result.length === 0) return false;
+            
+            switch (dataType) {
+                case 'float':
+                case 'double':
+                    return result.some(v => isFinite(v) && !isNaN(v) && Math.abs(v) < 1e10);
+                case 'ascii':
+                    return /[a-zA-Z0-9]/.test(result[0]);
+                default:
+                    return true;
+            }
+        }
+        
+        // 显示结果
+        function displayResults(results, targetTypeFilter, byteOrderFilter, encodingFilter) {
+            const allResultsGrid = document.getElementById('allResultsGrid');
+            const filteredResultsGrid = document.getElementById('filteredResultsGrid');
+            
+            // 显示所有结果
+            allResultsGrid.innerHTML = '';
+            let allCount = 0;
+            
+            // 显示筛选结果
+            filteredResultsGrid.innerHTML = '';
+            let filteredCount = 0;
+            
+            for (let result of results) {
+                const resultElement = createResultElement(result);
+                allResultsGrid.appendChild(resultElement.cloneNode(true));
+                allCount++;
+                
+                // 检查是否符合筛选条件
+                const matchesType = targetTypeFilter === 'all' || result.dataType === targetTypeFilter;
+                const matchesByteOrder = byteOrderFilter === 'all' || result.byteOrder === byteOrderFilter;
+                const matchesEncoding = encodingFilter === 'all' || result.encoding === encodingFilter;
+                
+                if (matchesType && matchesByteOrder && matchesEncoding) {
+                    filteredResultsGrid.appendChild(resultElement);
+                    filteredCount++;
+                }
+            }
+            
+            // 更新标签
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            tabBtns[0].textContent = `全部结果 (${allCount})`;
+            tabBtns[1].textContent = `筛选结果 (${filteredCount})`;
+            
+            // 更新全部结果的统计信息
+            document.getElementById('visibleCount').textContent = allCount;
+            document.getElementById('totalCount').textContent = allCount;
+            
+            // 清除之前的筛选
+            clearFilters();
+        }
+        
+        // 创建结果元素
+        function createResultElement(result) {
+            const div = document.createElement('div');
+            div.className = 'result-item';
+            if (!result.isValid) {
+                div.style.opacity = '0.6';
+            }
+            
+            div.innerHTML = `
+                <div class="result-header">
+                    <span>${result.inputFormat.toUpperCase()} → ${result.dataType.toUpperCase()} - ${result.byteOrder} - ${result.encoding}</span>
+                    <div>
+                        <button class="copy-btn" onclick="copyResult('${result.displayValue}')" title="复制结果">📋</button>
+                        <button class="copy-btn" onclick="showDetail('${result.dataType}', '${result.byteOrder}', '${result.encoding}')" title="查看详情">🔍</button>
+                    </div>
+                </div>
+                <div class="result-value">${result.displayValue}</div>
+            `;
+            
+            return div;
+        }
+        
+        // 显示原始数据
+        function displayRawData() {
+            const rawDataDisplay = document.getElementById('rawDataDisplay');
+            const bytes = convertToBytes(currentData, currentInputFormat);
+            
+            rawDataDisplay.innerHTML = `
+                <div class="process-step">
+                    <div class="step-title">📥 输入数据 (${currentInputFormat})</div>
+                    <div class="step-content">[${currentData.join(', ')}]</div>
+                </div>
+                <div class="process-step">
+                    <div class="step-title">🔢 转换为字节数组</div>
+                    <div class="step-content">[${bytes.join(', ')}]</div>
+                </div>
+                <div class="process-step">
+                    <div class="step-title">🔤 十六进制表示</div>
+                    <div class="step-content">[${bytes.map(b => '0x' + b.toString(16).padStart(2, '0').toUpperCase()).join(', ')}]</div>
+                </div>
+                <div class="process-step">
+                    <div class="step-title">💾 二进制表示</div>
+                    <div class="step-content">[${bytes.map(b => '0b' + b.toString(2).padStart(8, '0')).join(', ')}]</div>
+                </div>
+            `;
+        }
+        
+        // 显示详细转换过程
+        function showDetail(dataType, byteOrder, encoding) {
+            const modal = document.getElementById('detailModal');
+            const modalContent = document.getElementById('modalContent');
+            
+            const bytes = convertToBytes(currentData, currentInputFormat);
+            const processedBytes = applyEncoding(bytes, encoding);
+            
+            let content = `
+                <div class="process-step">
+                    <div class="step-title">🎯 转换参数</div>
+                    <div class="step-content">
+                        数据类型: ${dataType}<br>
+                        字节序: ${byteOrder}<br>
+                        编码格式: ${encoding}
+                    </div>
+                </div>
+                
+                <div class="process-step">
+                    <div class="step-title">📥 原始输入 (${currentInputFormat})</div>
+                    <div class="step-content">[${currentData.join(', ')}]</div>
+                </div>
+                
+                <div class="process-step">
+                    <div class="step-title">🔢 转换为字节数组</div>
+                    <div class="step-content">[${bytes.join(', ')}]</div>
+                </div>
+            `;
+            
+            if (encoding !== 'DEC') {
+                content += `
+                    <div class="process-step">
+                        <div class="step-title">🔄 应用${encoding}编码</div>
+                        <div class="step-content">[${processedBytes.data.join(', ')}]</div>
+                    </div>
+                `;
+            }
+            
+            // 显示字节序转换过程
+            if (dataType !== 'byte' && dataType !== 'bool' && dataType !== 'ascii') {
+                const bytesPerElement = dataType === 'short' || dataType === 'ushort' ? 2 : 
+                                      dataType === 'float' || dataType === 'int' || dataType === 'uint' ? 4 : 8;
+                                      
+                content += `
+                    <div class="process-step">
+                        <div class="step-title">🔀 应用字节序 ${byteOrder}</div>
+                        <div class="step-content">
+                            ${byteOrder}字节序说明:<br>
+                            ${getByteOrderDescription(byteOrder)}<br>
+                            每${bytesPerElement}字节为一组进行重排
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // 显示最终结果
+            const finalResult = convertWithParams(bytes, dataType, byteOrder, encoding);
+            if (finalResult.success) {
+                content += `
+                    <div class="process-step">
+                        <div class="step-title">✅ 最终结果</div>
+                        <div class="step-content">${finalResult.displayValue}</div>
+                    </div>
+                `;
+            }
+            
+            modalContent.innerHTML = content;
+            modal.style.display = 'block';
+        }
+        
+        // 获取字节序描述
+        function getByteOrderDescription(byteOrder) {
+            switch (byteOrder) {
+                case 'ABCD':
+                    return '大端序 - 高位字节在前，低位字节在后';
+                case 'DCBA':
+                    return '小端序 - 低位字节在前，高位字节在后';
+                case 'CDAB':
+                    return '西门子常见序 - 中间两字节交换的大端序';
+                case 'BADC':
+                    return '欧姆龙常见序 - 相邻字节交换的序列';
+                default:
+                    return '';
+            }
+        }
+        
+        // 复制结果
+        function copyResult(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // 可以添加复制成功提示
+                console.log('已复制到剪贴板');
+            });
+        }
+        
+        // 切换标签
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        // 显示品牌信息
+        function showBrandInfo() {
+            const brandInfo = document.getElementById('brandInfo');
+            brandInfo.style.display = brandInfo.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+        
+        // 清空输入
+        function clearInput() {
+            document.getElementById('rawData').value = '';
+            document.getElementById('inputValidation').innerHTML = '';
+            document.getElementById('resultsSection').style.display = 'none';
+            currentData = [];
+            allResults = [];
+        }
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('detailModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置示例数据
+            document.getElementById('rawData').value = '[13312,0,16128,0,13312,0,8704,0,5888,0]';
+        });
+    </script>
+</body>
+</html>
