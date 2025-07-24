@@ -284,6 +284,4 @@ This project is open source. Please check the LICENSE file for details.
 
 欢迎贡献！请随时提交问题、功能请求或拉取请求。
 
-### 📄 许可证
 
-此项目为开源项目。详细信息请查看 LICENSE 文件。
